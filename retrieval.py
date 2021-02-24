@@ -15,6 +15,12 @@ def retrieval(CB, C, dist):
     return retrieved_case, min_dist
 
 
+def retrieval_k(CB, C, dist, k):
+    distances = [[ab, dist(ab,C)] for ab in CB]
+    distances.sort(key=lambda x: x[1])
+    return distances[:k]
+    
+
 
 def dist1(ab,c):
     """
