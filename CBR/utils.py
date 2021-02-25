@@ -14,6 +14,10 @@ length_sep = 3
 length_doublesep = 3
 #--------------
 
+def getLengthLetter():
+    return length_letter
+
+
 def getSubString(word):
     """
     Returns the prefixes of a word passed in as `w`.

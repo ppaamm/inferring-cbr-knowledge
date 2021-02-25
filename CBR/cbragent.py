@@ -1,5 +1,5 @@
-import retrieval
-import analogy
+from . import retrieval
+from . import analogy
 import sys
 
 class CBRAgent:
@@ -10,7 +10,13 @@ class CBRAgent:
         self.distance = distance
         self.k_neighbors = k_neighbors
         self.analogy = analogy
-        
+    
+    
+    def clone(self):
+        clone_agent = CBRAgent(self.distance, self.analogy, self.k_neighbors)
+        clone_agent.CB = [case for case in self.CB]
+        return clone_agent
+    
     
     def insert_case(self, new_problem, new_solution):
         self.CB.append([new_problem, new_solution])
@@ -79,14 +85,14 @@ class CBRAgent:
 
 
 ################## Example
-        
-cbr = CBRAgent(retrieval.dist5, analogy.solveAnalogy, 2)
-cbr.insert_case("rosa", "rosam")
-cbr.insert_case("dominus", "dominum")
-cbr.insert_case("corpus", "corpus")
-
-print(cbr.solve_problem("vita"))
-print(cbr.solve_problem("lingus"))
+if __name__ == '__main__':       
+    cbr = CBRAgent(retrieval.dist5, analogy.solveAnalogy, 2)
+    cbr.insert_case("rosa", "rosam")
+    cbr.insert_case("dominus", "dominum")
+    cbr.insert_case("corpus", "corpus")
+    
+    print(cbr.solve_problem("vita"))
+    print(cbr.solve_problem("lingus"))
             
             
         

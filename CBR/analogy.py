@@ -1,5 +1,5 @@
 import sys
-from utils import getTransformationPart1, getLengthInstruction, getPart2, applyTransformation, writeInstruction, getTransformation2
+from . utils import getTransformationPart1, getLengthInstruction, getPart2, applyTransformation, writeInstruction, getTransformation2
 
 
 

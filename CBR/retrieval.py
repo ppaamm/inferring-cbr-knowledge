@@ -1,5 +1,5 @@
-from analogy import solveAnalogy
-from utils import getTransformationPart1, length_letter, getLengthInstruction, getTransformation2
+from . analogy import solveAnalogy
+from . utils import getTransformationPart1, getLengthLetter, getLengthInstruction, getTransformation2
 import sys
 
 
@@ -41,7 +41,7 @@ def getK_A(a):
 
     getTransformationPart1("", a, a, [], [], result_transf_1, result_varA, [])
     
-    min_dist = len(a) * length_letter
+    min_dist = len(a) * getLengthLetter()
     
     for x in range(len(result_transf_1)):
         ll = getLengthInstruction(result_transf_1[x], result_varA[x], 1, 0, 0)
