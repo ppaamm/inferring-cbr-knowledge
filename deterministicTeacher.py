@@ -8,6 +8,7 @@ Deterministic teacher:
 # temp
 import random
 import string
+import time
 from CBR import retrieval
 from CBR import analogy
 # end temp
@@ -54,6 +55,7 @@ class DeterministicTeacher:
         scores = []
         for case in self.trainBatch:
             # Simulate what happens when displaying this case to the learner
+            #print(horizon, case)
             learner_rollout = learner.clone()
             learner_rollout.retain(case[0], case[1])
             if horizon == 0: score = self.estimated_score(learner=learner_rollout)
@@ -77,7 +79,7 @@ def get_random_string(max_length):
     return ''.join(random.choice(letters) for i in range(length))
 
 
-def create_batch(n_a, n_us):
+def create_batch(n_a, n_us, n_um=0):
     batch = []
     for _ in range(n_a):
         base = get_random_string(5)
@@ -85,26 +87,40 @@ def create_batch(n_a, n_us):
     for _ in range(n_us):
         base = get_random_string(5)
         batch.append([base + 'us', base + 'um'])
+    for _ in range(n_um):
+        base = get_random_string(5)
+        batch.append([base + 'um', base + 'um'])    
     return batch
     
     
-train_batch = create_batch(5,5)
-test_batch = create_batch(25,15) # more a-type than us-type
+train_batch = create_batch(2,2,2)
+test_batch = create_batch(10,30,20) # more a-type than us-type
 
 
 teacher = DeterministicTeacher(train_batch, test_batch, retrieval.dist5, analogy.solveAnalogy, 1, verbose=False)
 
+
+start_time = time.time()
+
 # Learning on two steps
 # Step 1:
-action, _ = teacher.chooseAction(horizon=1)
+action, _ = teacher.chooseAction(horizon=2)
 teacher.playAction(action)
 print('First action:', action)
 
 # Step 2:
-action, _ = teacher.chooseAction(horizon=0)
+action, _ = teacher.chooseAction(horizon=1)
 teacher.playAction(action)
 print('Second action:', action)
 
+# Step 3:
+action, _ = teacher.chooseAction(horizon=0)
+teacher.playAction(action)
+print('Thrid action:', action)
+
+
 print("Final score:", teacher.estimated_score())
+
+print("--- %s seconds ---" % (time.time() - start_time))
 
 
