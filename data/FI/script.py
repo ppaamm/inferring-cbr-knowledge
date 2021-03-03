@@ -1,3 +1,11 @@
+# -*- coding: utf-8 -*-
+"""
+Spyder Editor
+
+This is a temporary script file.
+"""
+
+import sys
 import xml.etree.ElementTree as ET
 import requests
 import pandas as pd
@@ -27,7 +35,7 @@ def readWords(filepath = "./kotus-sanalista_v1/kotus-sanalista-class.txt"):
 def getStats(df):
     return df[1].value_counts()
 
-def scrapGenitive(word):
+def scrapGenitiveFIWiktionary(word):
     r = requests.get("https://fi.wiktionary.org/wiki/" + word)
     if ("genetiivi" not in r.text.lower()):
         return ""
@@ -48,9 +56,27 @@ def scrapGenitive(word):
                         return _gen[0]
     return ""
 
+def scrapGenitiveWiktionary(word):
+    r = requests.get("https://wiktionary.org/wiki/" + word)
+    if ("inflection-table fi-decl vsSwitcher" not in r.text):
+        return ""
+    
+    root = ET.fromstring(r.text)
+    table = root.find(".//table[@class='inflection-table fi-decl vsSwitcher']")
+    # table = _table[0]
+    _tr = table.findall(".//tr")
+    
+    for i in range(0, len(_tr)):
+        l = [x.lower().rstrip() for x in list(_tr[i].itertext())]
+        if ('genitive' in l):
+            return l[3]
+
+    return ""
+
 ############################################################################
 
 # formatClass()
+
 
 df = readWords()
 
@@ -59,7 +85,8 @@ df = df[df[1] != -1]
 df.reset_index(inplace=True, drop=True)
 
 file_name = "gen"
-range_a = 29000
+range_a = int(sys.argv[1])
+# 2000
 range_b = min(range_a + 999, df.shape[0]-1)
 print(range_b)
 
@@ -68,11 +95,15 @@ file_err = open("./Genitive/err_" + file_name + "_" + str(range_a) + "_" + str(r
 
 r = range(range_a, range_b + 1)
 for i in r:
-    gen = scrapGenitive(df[0][i]).rstrip() # genitive
-    if (gen == ""):
-        file_err.write(df[0][i] + "," + str(df[1][i]) + "\n")
-    else:
+    gen = scrapGenitiveFIWiktionary(df[0][i]).rstrip() # genitive
+    if (gen != ""):
         file_out.write(df[0][i] + "," + gen + "," + str(df[1][i]) + "\n")
+    else:
+        gen2 = scrapGenitiveWiktionary(df[0][i]).rstrip()
+        if (gen2 != ""):
+            file_out.write(df[0][i] + "," + gen2 + "," + str(df[1][i]) + "\n")
+        else:
+            file_err.write(df[0][i] + "," + str(df[1][i]) + "\n")
 
 file_out.close()
 file_err.close()
