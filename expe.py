@@ -92,7 +92,8 @@ CB_user = pd.concat([type2.sample(n=n_user),
                      type38.sample(n=n_user),
                      type41.sample(n=n_user)])
 
-CB_user = CB_user.filter(items = ['nominative','genitive'])        
+CB_user = CB_user.filter(items = ['nominative','genitive']).values.tolist()  
+
 
 n_teach = 5        
 CB_teach = pd.concat([type2.sample(n=n_teach),
@@ -100,16 +101,16 @@ CB_teach = pd.concat([type2.sample(n=n_teach),
                       type38.sample(n=n_teach),
                       type41.sample(n=n_teach)])
 
-CB_teach = CB_teach.filter(items = ['nominative','genitive'])      
+CB_teach = CB_teach.filter(items = ['nominative','genitive']).values.tolist()  
         
-n_test = 10
+n_test = 3
 
 CB_test = pd.concat([type2.sample(n=n_test),
                      type11.sample(n=n_test),
                      type38.sample(n=n_test),
                      type41.sample(n=n_test)])
 
-CB_test = CB_test.filter(items = ['nominative','genitive'])
+CB_test = CB_test.filter(items = ['nominative','genitive']).values.tolist()  
 
 
 
@@ -125,8 +126,24 @@ def evaluate(CB_test, CB_user, distances_def, probas_cb, probas_dist, proba_harm
         order = [np.argsort(distances[d]) for d in range(3)]
         probas = [proba_1nn_total(o, probas_cb) for o in order]
         
+        results = {}
         
-    return 0
+        for i in range(len(CB_user)):
+            print(i)
+            for d in range(len(distances)):
+                result_h_1 = adaptation(CB_user[i][0], CB_user[i][1], x, True)
+                p = proba_harmony * probas_dist[d] * probas[d][i]
+                if result_h_1 in results:
+                    results[result_h_1] += p
+                else: results[result_h_1] = p
+                
+                result_h_0 = adaptation(CB_user[i][1], CB_user[i][1], x, False)
+                p = (1 - proba_harmony) * probas_dist[d] * probas[d][i]
+                if result_h_0 in results:
+                    results[result_h_0] += p
+                else: results[result_h_0] = p
+        if y in results: score += results[y]
+    return score / len(CB_test)
 
 
 
