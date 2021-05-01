@@ -3,12 +3,19 @@ Inference of the case base with k=1
 """
 
 
-from CBR import retrieval
 from CBR import analogy
 import numpy as np
 import copy
 
 
+
+def proba_1nn_total(order, probas_cb):
+    probas = np.zeros(len(order))
+    proba = 1
+    for l in order:
+        probas[l] = proba * probas_cb[l]
+        proba *= (1- probas_cb[l])
+    return probas
 
 
 def proba_1nn_base(order, j, probas_cb):
@@ -175,76 +182,5 @@ def update_probas_2(x, y, probas_cb, probas_dist, proba_harmony, X, Y, n_data, d
 
 
 
-
-
-
-
-###############################################################################
-
-
-#CB_teach = [['koira', 'koiran'],
-#            ['kissa', 'kissan'],
-#            ['talo', 'talon'],
-#            ['rakkaus', 'rakkauden'], 
-#            ['ystäväys', 'ystäväyden'], 
-#            ['tervellinen', 'tervellisen'],
-#            ['keltainen', 'keltaisen'],
-#            ['hyvärinen', 'hyvärisen'],
-#            ['vieras', 'vieraan'],
-#            ['sairas','sairaan']]
-
-
-
-CB_teach = [['koira', 'koirassa'],
-            ['mäyrä', 'mäyrässä'],
-            ['talo', 'talossa'],
-            ['rakkaus', 'rakkaudessa'], 
-            ['ystäväys', 'ystäväydessä'], 
-            ['tervellinen', 'tervellisessä'],
-            ['keltainen', 'keltaisesssa'],
-            ['hyvärinen', 'hyvärisessä'],
-            ['vieras', 'vieraassa'],
-            ['sairas','sairaassa']]
-
-
-X = [case[0] for case in CB_teach]
-Y = [case[1] for case in CB_teach]
-
-n_words = len(CB_teach)
-
-chosen_indices = [0,4,6]
-
-harmony = True
-
-
-CB_learn = []
-for i in chosen_indices:
-    CB_learn.append(CB_teach[i])
-    
-dist_learn = retrieval.dist5
-
-
-
-
-distances_def = [retrieval.dist2, retrieval.dist3, retrieval.dist5]
-n_dist = len(distances_def)
-
-probas_cb = .5 * np.ones(n_words)
-#probas_dist = np.ones(n_dist) / n_dist
-probas_dist = np.array([.1,.1,.8])
-proba_harmony = .5
-
-
-
-for i in range(n_words):
-    if i not in chosen_indices:
-        x = X[i]
-        source, _ = retrieval.retrieval(CB_learn, x, dist_learn)
-        #y = analogy.solveAnalogy(source[0][0], source[0][1], x)[0][0][0]
-        y = adaptation(source[0][0], source[0][1], x, harmony)
-        
-        #probas_cb, probas_dist = update_probas(x, y, probas_cb, probas_dist, X, Y, n_words, distances_def)
-        probas_cb, probas_dist, proba_harmony = update_probas_2(x, y, probas_cb, probas_dist, proba_harmony, X, Y, n_words, distances_def)
-        #print(probas_cb)
 
 
