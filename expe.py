@@ -1,6 +1,6 @@
 from CBR import retrieval
 from CBR import analogy
-from CB_inference import adaptation, update_probas_2, proba_1nn_total
+from CB_inference import adaptation, update_probas_2, proba_1nn_total, init
 import numpy as np
 import pandas as pd
 
@@ -8,20 +8,20 @@ import pandas as pd
 
 
 def toy():
-
-#CB_teach = [['koira', 'koiran'],
-#            ['kissa', 'kissan'],
-#            ['talo', 'talon'],
-#            ['rakkaus', 'rakkauden'], 
-#            ['ystäväys', 'ystäväyden'], 
-#            ['tervellinen', 'tervellisen'],
-#            ['keltainen', 'keltaisen'],
-#            ['hyvärinen', 'hyvärisen'],
-#            ['vieras', 'vieraan'],
-#            ['sairas','sairaan']]
-
-
-
+    #CB_teach = [['koira', 'koiran'],
+    #            ['kissa', 'kissan'],
+    #            ['talo', 'talon'],
+    #            ['rakkaus', 'rakkauden'], 
+    #            ['ystäväys', 'ystäväyden'], 
+    #            ['tervellinen', 'tervellisen'],
+    #            ['keltainen', 'keltaisen'],
+    #            ['hyvärinen', 'hyvärisen'],
+    #            ['vieras', 'vieraan'],
+    #            ['sairas','sairaan']]
+    
+    distances_def = [retrieval.dist2, retrieval.dist3, retrieval.dist5]
+    n_dist = len(distances_def)
+    
     CB_teach = [['koira', 'koirassa'],
                 ['mäyrä', 'mäyrässä'],
                 ['talo', 'talossa'],
@@ -36,43 +36,38 @@ def toy():
     
     X = [case[0] for case in CB_teach]
     Y = [case[1] for case in CB_teach]
-    
+    dict_X = {X[i]:i for i in range(len(X))}
     n_words = len(CB_teach)
     
+    # Configuration of the learner
+
     chosen_indices = [0,4,6]
-    
     harmony = True
     
+    CB_learn = [CB_teach[i] for i in chosen_indices]
+    dist_learn = distances_def[2]
     
-    CB_learn = []
-    for i in chosen_indices:
-        CB_learn.append(CB_teach[i])
-        
-    dist_learn = retrieval.dist5
+    a_solutions, a_distances, a_orders = init(X, Y, X, distances_def)
     
-    
-    
-    
-    distances_def = [retrieval.dist2, retrieval.dist3, retrieval.dist5]
-    n_dist = len(distances_def)
-    
+    # Initalize priors
     probas_cb = .5 * np.ones(n_words)
-    #probas_dist = np.ones(n_dist) / n_dist
-    probas_dist = np.array([.1,.1,.8])
+    probas_dist = np.ones(n_dist) / n_dist
+    #probas_dist = np.array([.1,.1,.8])
     proba_harmony = .5
     
-    
-    
     for i in range(n_words):
+        print("word", i)
         if i not in chosen_indices:
             x = X[i]
             source, _ = retrieval.retrieval(CB_learn, x, dist_learn)
-            #y = analogy.solveAnalogy(source[0][0], source[0][1], x)[0][0][0]
-            y = adaptation(source[0][0], source[0][1], x, harmony)
-            
-            #probas_cb, probas_dist = update_probas(x, y, probas_cb, probas_dist, X, Y, n_words, distances_def)
-            probas_cb, probas_dist, proba_harmony = update_probas_2(x, y, probas_cb, probas_dist, proba_harmony, X, Y, n_words, distances_def)
-            #print(probas_cb)
+            # y = analogy.solveAnalogy(source[0][0], source[0][1], x)[0][0][0]
+            # y = adaptation(source[0][0], source[0][1], x, harmony)
+            idx_source = dict_X[source[0][0]]
+            y = a_solutions[harmony][i][idx_source]
+            #probas_cb, probas_dist = update_probas(x, y, probas_cb, probas_dist, X, Y, n_words, distances_def, dict_X, a_solutions, a_orders)
+            probas_cb, probas_dist, proba_harmony = update_probas_2(x, y, probas_cb, probas_dist, proba_harmony, X, Y, n_words, distances_def, dict_X, a_solutions, a_orders)
+
+    return probas_cb, probas_dist, proba_harmony
     
 
 
@@ -132,3 +127,10 @@ def evaluate(CB_test, CB_user, distances_def, probas_cb, probas_dist, proba_harm
         
         
     return 0
+
+
+
+import time
+start_time = time.time()
+toy()
+print("--- %s seconds ---" % (time.time() - start_time))
