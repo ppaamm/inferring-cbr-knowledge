@@ -566,7 +566,7 @@ alpakka,alpakan,14
 alpakka,alpakan,14
 alpakkainen,alpakkaisen,38
 alpakkainen,alpakkaisen,38
-alpi,alven, (alpin),7
+alpi,alven,7
 alpiininen,alpiinisen,38
 alpinismi,alpinismin,5
 alpinisti,alpinistin,5
@@ -19841,7 +19841,6 @@ vihkimätön,vihkimättömän,34
 vihkipalli,vihkipallin,5
 vihkiytymätön,vihkiytymättömän,34
 vihkiäiset,–,38
-vihko,vih(k)on,1
 vihkollinen,vihkollisen,38
 vihkonen,vihkosen,38
 vihlaisu,vihlaisun,2
