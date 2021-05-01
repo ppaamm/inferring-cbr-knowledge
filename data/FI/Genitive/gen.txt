@@ -1,3 +1,4 @@
+nominative,genitive,type
 aakkonen,aakkosen,38
 aakkosellinen,aakkosellisen,38
 aakkosellisuus,aakkosellisuuden,40
@@ -391,7 +392,6 @@ aksiomaattisuus,aksiomaattisuuden,40
 aksiomi,aksiomin,5
 aksiooma,aksiooman,10
 akti,aktin,5
-aktiivat,—,13
 aktiivi,aktiivin,5
 aktiivinen,aktiivisen,38
 aktiivisuus,aktiivisuuden,40
@@ -770,7 +770,6 @@ anonymiteetti,anonymiteetin,5
 anonyymi,anonyymin,5
 anonyymius,anonyymiuden,40
 anonyymiys,anonyymiyden,40
-anopikset,—,39
 anoppi,anopin,5
 anoppila,anoppilan,12
 anorakki,anorakin,5
@@ -883,7 +882,6 @@ appenzeller,appenzellerin,6
 appi,apen,7
 applikaatio,applikaation,3
 applikointi,applikoinnin,5
-apposet,—,38
 appositio,apposition,3
 approbatur,approbaturin,6
 aprikointi,aprikoinnin,5
@@ -1072,7 +1070,6 @@ kummajainen,kummajaisen,38
 kummallinen,kummallisen,38
 kummallisuus,kummallisuuden,40
 kummankinlainen,kummankinlaisen,38
-kummarit,—,6
 kummastelu,kummastelun,2
 kummastus,kummastuksen,39
 kummeli,kummelin,6
@@ -1096,7 +1093,6 @@ kumpi,kumman,16
 kumpikaan,kummankaan,16
 kumpikin,kummankin,16
 kumppani,kumppanin,6
-kumppanukset,—,39
 kumppanuus,kumppanuuden,40
 kumpu,kummun,1
 kumpuinen,kumpuisen,38
@@ -1161,7 +1157,6 @@ kuokinta,kuokinnan,9
 kuokka,kuokan,10
 kuokkija,kuokkijan,12
 kuola,kuolan,10
-kuolaimet,—,33
 kuolainen,kuolaisen,38
 kuolema,kuoleman,10
 kuolemaantuomittu,kuolemaantuomitun,1
@@ -1344,7 +1339,6 @@ kutka,kutkan,10
 kutoja,kutojan,10
 kutomo,kutomon,2
 kutonen,kutosen,38
-kutrit,—,5
 kutsu,kutsun,1
 kutsuja,kutsujan,10
 kutsumaton,kutsumattoman,34
@@ -1378,7 +1372,6 @@ kuulematon,kuulemattoman,34
 kuulemattomuus,kuulemattomuuden,40
 kuulento,kuulennon,1
 kuuliainen,kuuliaisen,38
-kuuliaiset,—,38
 kuuliaisuus,kuuliaisuuden,40
 kuulija,kuulijan,12
 kuullotus,kuullotuksen,39
@@ -1398,7 +1391,6 @@ kuultomaali,kuultomaalin,5
 kuuluisa,kuuluisan,10
 kuuluisuus,kuuluisuuden,40
 kuulumaton,kuulumattoman,34
-kuulumiset,—,38
 kuulustelija,kuulustelijan,12
 kuulusteltava,kuulusteltavan,10
 kuulustelu,kuulustelun,2
@@ -3277,7 +3269,6 @@ lantalainen,lantalaisen,38
 lantinki,lantingin,5
 lantio,lantion,3
 lantrinki,lantringin,5
-lantsarit,—,6
 lantti,lantin,5
 lantto,lanton,1
 lanttu,lantun,1
@@ -3495,7 +3486,6 @@ legaalinen,legaalisen,38
 legaatti,legaatin,5
 legenda,legendan,9
 legendaarinen,legendaarisen,38
-leggingsit,—,5
 legioona,legioonan,10
 legioonalainen,legioonalaisen,38
 legitiimi,legitiimin,5
@@ -3504,7 +3494,6 @@ legitimointi,legitimoinnin,5
 leguaani,leguaanin,5
 lehahdus,lehahduksen,39
 lehaus,lehauksen,39
-lehdekset,—,39
 lehdistö,lehdistön,1
 lehdokki,lehdokin,5
 lehdykkä,lehdykän,14
@@ -3903,7 +3892,6 @@ liittolaisuus,liittolaisuuden,40
 liittouma,liittouman,10
 liittoutuma,liittoutuman,10
 liittoutumaton,liittoutumattoman,34
-liittoutuneet,—,47
 liittymä,liittymän,10
 liittymäkohta,liittymäkohdan,10
 liitu,liidun,1
@@ -4015,7 +4003,6 @@ lipasto,lipaston,2
 lipeinen,lipeisen,38
 liperi,liperin,6
 liperi,liperin,6
-liperit,—,6
 lipevyys,lipevyyden,40
 lipevä,lipevän,10
 lipeä,lipeän,15
@@ -4237,8 +4224,6 @@ loogisuus,loogisuuden,40
 loosi,loosin,5
 loota,loodan,10
 lootus,lootuksen,39
-loparit,—,6
-lopettajaiset,—,38
 lopetus,lopetuksen,39
 loppiainen,loppiaisen,38
 loppiaisaika,loppiaisajan,9
@@ -4350,7 +4335,6 @@ luksus,luksuksen,39
 luku,luvun,1
 lukuinen,lukuisen,38
 lukuisa,lukuisan,10
-lukuset,—,38
 lulla,lullan,10
 lullukka,lullukan,14
 lume,lumeen,48
@@ -4609,7 +4593,6 @@ lähiö,lähiön,3
 lähiöasuminen,lähiöasumisen,38
 lähtemätön,lähtemättömän,34
 lähtijä,lähtijän,12
-lähtiäiset,—,38
 lähtö,lähdön,1
 lähtöaika,lähtöajan,9
 lähtökiire,lähtökiireen,48
@@ -4964,7 +4947,6 @@ maiskuttelu,maiskuttelun,2
 maiskutus,maiskutuksen,39
 maissi,maissin,5
 maistaja,maistajan,10
-maistajaiset,—,38
 maisteri,maisterin,6
 maisti,maistin,5
 maistraatti,maistraatin,5
@@ -5459,15 +5441,12 @@ menetys,menetyksen,39
 menevä,menevän,10
 menijä,menijän,12
 menkat,–,9
-menkut,—,1
 menneisyys,menneisyyden,40
 menninkäinen,menninkäisen,38
 mennyt,menneen,47
 meno,menon,1
 menopaussi,menopaussin,5
-mensikset,—,39
 menstruaatio,menstruaation,3
-mensut,—,1
 mentaalinen,mentaalisen,38
 mentalismi,mentalismin,5
 mentaliteetti,mentaliteetin,5
@@ -5880,7 +5859,6 @@ molari,molarin,6
 molekulaarinen,molekulaarisen,38
 molekylaarinen,molekylaarisen,38
 molekyyli,molekyylin,5
-molemmat,—,16
 molemminpuolisuus,molemminpuolisuuden,40
 mollaus,mollauksen,39
 molli,mollin,5
@@ -7052,7 +7030,6 @@ nivel,nivelen,32
 nivelikäs,nivelikkään,41
 nivelistö,nivelistön,1
 nivelkärsäinen,nivelkärsäisen,38
-nivuset,—,38
 nobelisti,nobelistin,5
 noduuli,noduulin,5
 noisetti,noisetin,5
