@@ -74,7 +74,7 @@ def toy():
 
 
 
-df = pd.read_csv (".\data\FI\Genitive\gen.txt")
+df = pd.read_csv ("./data/FI/Genitive/gen.txt")
 df = df[df.genitive != '—']
 df = df[df.genitive != '–']
 
@@ -88,9 +88,9 @@ type41 = df[df.type == 41]
 n_user = 2
 
 CB_user = pd.concat([type2.sample(n=n_user),
-                     type11.sample(n=n_user),
-                     type38.sample(n=n_user),
-                     type41.sample(n=n_user)])
+                      type11.sample(n=n_user),
+                      type38.sample(n=n_user),
+                       type41.sample(n=n_user)])
 
 CB_user = CB_user.filter(items = ['nominative','genitive']).values.tolist()  
 
@@ -106,16 +106,45 @@ CB_teach = CB_teach.filter(items = ['nominative','genitive']).values.tolist()
 n_test = 3
 
 CB_test = pd.concat([type2.sample(n=n_test),
-                     type11.sample(n=n_test),
-                     type38.sample(n=n_test),
-                     type41.sample(n=n_test)])
+                       type11.sample(n=n_test),
+                       type38.sample(n=n_test),
+                       type41.sample(n=n_test)])
 
 CB_test = CB_test.filter(items = ['nominative','genitive']).values.tolist()  
 
-
-
-
 def evaluate(CB_test, CB_user, distances_def, probas_cb, probas_dist, proba_harmony):
+    score = 0
+    
+    X_s = [z[0] for z in CB_user]
+    Y_s = [z[1] for z in CB_user]
+    
+    X_t = [z[0] for z in CB_test]
+    Y_t = [z[1] for z in CB_test]
+    
+    a_solutions, a_distances, a_orders = init(X_s, Y_s, X_t, distances_def)
+    
+    for tgt in range(len(CB_test)):
+        y = Y_t[tgt]
+        
+        order = [a_orders[d][tgt] for d in range(len(distances_def))]
+        probas = [proba_1nn_total(o, probas_cb) for o in order]
+        
+        p = 0
+        for h in range(2):
+            sol = a_solutions[h][tgt]
+            if y in sol:
+                indices = [idx for idx, f in enumerate(sol) if f == y] # indexes of NN yielding solution y
+                for v in indices:
+                    for d in range(len(distances_def)):
+                        if (h==0):
+                            p += (1 - proba_harmony) * probas_dist[d] * probas[d][v]
+                        else:
+                            p += proba_harmony * probas_dist[d] * probas[d][v]
+        score += p
+    return score / len(CB_test)
+
+
+def evaluate2(CB_test, CB_user, distances_def, probas_cb, probas_dist, proba_harmony):
     score = 0
     for case in CB_test:
         x = case[0]
@@ -125,7 +154,7 @@ def evaluate(CB_test, CB_user, distances_def, probas_cb, probas_dist, proba_harm
         distances = [[d(learnt_case, x) for learnt_case in CB_user] for d in distances_def]
         order = [np.argsort(distances[d]) for d in range(3)]
         probas = [proba_1nn_total(o, probas_cb) for o in order]
-        
+
         results = {}
         
         for i in range(len(CB_user)):
@@ -137,7 +166,7 @@ def evaluate(CB_test, CB_user, distances_def, probas_cb, probas_dist, proba_harm
                     results[result_h_1] += p
                 else: results[result_h_1] = p
                 
-                result_h_0 = adaptation(CB_user[i][1], CB_user[i][1], x, False)
+                result_h_0 = adaptation(CB_user[i][0], CB_user[i][1], x, False)
                 p = (1 - proba_harmony) * probas_dist[d] * probas[d][i]
                 if result_h_0 in results:
                     results[result_h_0] += p
@@ -146,8 +175,16 @@ def evaluate(CB_test, CB_user, distances_def, probas_cb, probas_dist, proba_harm
     return score / len(CB_test)
 
 
+# ------- Only for testing
+distances_def = [retrieval.dist2, retrieval.dist3, retrieval.dist5]
+probas_cb = .5 * np.ones(len(CB_user))
+probas_dist = np.ones(len(distances_def)) / len(distances_def)
+proba_harmony = .5
+# -------
 
 import time
 start_time = time.time()
-toy()
+# toy()
+
+print(evaluate(CB_test, CB_user, distances_def, probas_cb, probas_dist, proba_harmony))
 print("--- %s seconds ---" % (time.time() - start_time))
