@@ -2,6 +2,8 @@ import sys
 from . utils import getTransformationPart1, getLengthInstruction, getPart2, applyTransformation, writeInstruction, getTransformation2
 
 
+analogy_buffer = {}
+
 
 def solveAnalogy(A, B, C):
     """
@@ -10,6 +12,12 @@ def solveAnalogy(A, B, C):
     each solution is constituted of the solution term D 
     and the corresponding transformation.
     """
+    
+    abc = A + ':' + B + '::' + C
+    
+    if abc in analogy_buffer: 
+        #print('using analogy buffer')
+        return analogy_buffer[abc]
     
     min_length_result = len(C) + len(B) - len(A)
 
@@ -45,6 +53,8 @@ def solveAnalogy(A, B, C):
                         final_result = [ [D, writeInstruction(result_transf_2[y], result_varB[y], result_varD)] ]
                     elif (ll == min_length and len(D) >= min_length_result):
                         final_result.append([D, writeInstruction(result_transf_2[y], result_varB[y], result_varD)])
+                        
+    analogy_buffer[abc] = (final_result, min_length)
     return final_result, min_length
 
 
