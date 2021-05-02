@@ -1,11 +1,15 @@
 from CBR import retrieval
-from CB_inference import adaptation, update_probas_2, proba_1nn_total, init
+from CB_inference import adaptation, update_probas_full, proba_1nn_total, init
 import numpy as np
 import pandas as pd
 import random
 import seaborn as sns
 import time
 
+###############################################################################
+# The user has a fixed CB. 
+# The agent infers the content of the CB + distance + vowel harmony
+# Retrieval is using 1-NN
 ###############################################################################
 
 
@@ -67,7 +71,7 @@ def toy():
             idx_source = dict_X[source[0][0]]
             y = a_solutions[harmony][i][idx_source]
             #probas_cb, probas_dist = update_probas(x, y, probas_cb, probas_dist, X, Y, n_words, distances_def, dict_X, a_solutions, a_orders)
-            probas_cb, probas_dist, proba_harmony = update_probas_2(x, y, probas_cb, probas_dist, proba_harmony, X, Y, n_words, distances_def, dict_X, a_solutions, a_orders)
+            probas_cb, probas_dist, proba_harmony = update_probas_full(x, y, probas_cb, probas_dist, proba_harmony, X, Y, n_words, distances_def, dict_X, a_solutions, a_orders)
 
     return probas_cb, probas_dist, proba_harmony
     
@@ -263,7 +267,7 @@ for r in range(n_runs):
         x = CB_teach[randomized[i]][0]
         source, _ = retrieval.retrieval(CB_user, x, distance_user)
         y = adaptation(source[0][0], source[0][1], x, harmony_user)
-        probas_cb, probas_dist, proba_harmony = update_probas_2(x, y, probas_cb, probas_dist, proba_harmony, X, Y, n_words, distances_def, dict_X, a_solutions, a_orders)
+        probas_cb, probas_dist, proba_harmony = update_probas_full(x, y, probas_cb, probas_dist, proba_harmony, X, Y, n_words, distances_def, dict_X, a_solutions, a_orders)
         
         runs.append(r)
         steps.append(i+1)        

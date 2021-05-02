@@ -1,5 +1,5 @@
 from . analogy import solveAnalogy
-from . utils import getTransformationPart1, getLengthLetter, getLengthInstruction, getTransformation2
+from . import complexity
 import sys
 
 
@@ -32,24 +32,7 @@ def dist1(ab,c):
     return dist
     
 
-def getK_A(a):
-    """
-    returns K(A)
-    """
-    result_transf_1 = []
-    result_varA = []
 
-    getTransformationPart1("", a, a, [], [], result_transf_1, result_varA, [])
-    
-    min_dist = len(a) * getLengthLetter()
-    
-    for x in range(len(result_transf_1)):
-        ll = getLengthInstruction(result_transf_1[x], result_varA[x], 1, 0, 0)
-        if ll < min_dist: 
-            min_dist = ll
-            #print(result_transf_1[x], result_varA[x])
-
-    return min_dist
 
 def dist2(ab,c):
     """
@@ -59,40 +42,17 @@ def dist2(ab,c):
     b = ab[1]
     _, dist = solveAnalogy(a,b,c)
     #return dist - len(a) * length_letter
-    return dist - getK_A(a)
+    return dist - complexity.getK_A(a)
 
 def dist3(ab,c):
     """
-    d3(A:B,C) = min_D K(A:B::C:D) - K(A::B)
+    d3(A:B,C) = min_D K(A:B::C:D) - K(A:B)
     """
     a = ab[0]
     b = ab[1]
     _, dist = solveAnalogy(a,b,c)
     
-    # Compute K(A::B)
-    result_transf_1 = []
-    result_varA = []
-
-
-    getTransformationPart1("", a, a, [], [], result_transf_1, result_varA, [])
-    min_length = sys.maxsize
-    
-    for x in range(len(result_transf_1)):
-        ll = getLengthInstruction(result_transf_1[x], result_varA[x], 1, 1, 0)
-        if (ll <= min_length):
-            result_transf_2 = []
-            result_varB = []
-            l = result_varA[x]
-            getTransformation2(result_transf_1[x] + ",:", b, l, result_transf_2, result_varB)
-            #print(result_transf_2, result_varB)
-            for y in range(len(result_transf_2)):
-                ll = getLengthInstruction(result_transf_2[y], result_varB[y], 1, 1, 0)
-                if ll < min_length: 
-                    #print("--------")
-                    #print(result_transf_2[y])
-                    #print(result_varB[y])
-                    #print('--------')
-                    min_length = ll
+    min_length = complexity.getK_AB(a,b)
     
     return dist - min_length
 
@@ -102,21 +62,7 @@ def dist4(ab,c):
     d4(A:B,C) = K(A::C)
     """
     a = ab[0]
-    
-    transformations = []
-    varA = []
-    varC = []
-
-    getTransformationPart1("", a, c, [], [], transformations, varA, varC)
-    
-    min_dist = sys.maxsize
-    
-    for x in range(len(transformations)):
-        ll = getLengthInstruction(transformations[x], varA[x] + varC[x], 2, 0, 1)
-        if ll < min_dist: 
-            min_dist = ll
-            # print(transformations[x])
-    return min_dist
+    return complexity.getK_AC(a,c)
 
 
 def dist5(ab,c):
@@ -124,7 +70,7 @@ def dist5(ab,c):
     d5(A:B,C) = K(A::C) - K(A)
     """
     #return dist4(ab,c) - len(ab[0]) * length_letter
-    return dist4(ab,c) - getK_A(ab[0])
+    return dist4(ab,c) - complexity.getK_A(ab[0])
 
 
 ###############################################################################
