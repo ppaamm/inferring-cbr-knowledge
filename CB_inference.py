@@ -79,7 +79,7 @@ def init(A, B, C, distances_def):
     return a_solutions, a_distances, a_orders
 
 
-def update_probas(x, y, probas_cb, probas_dist, X, Y, n_data, distances_def, dict_X, a_solutions, a_orders):
+def update_probas_no_harmony(x, y, probas_cb, probas_dist, X, Y, n_data, distances_def, dict_X, a_solutions, a_orders):
     """
     x: problem given to the user
     y: response of the user
@@ -133,7 +133,7 @@ def update_probas(x, y, probas_cb, probas_dist, X, Y, n_data, distances_def, dic
 
 
 
-def update_probas_2(x, y, probas_cb, probas_dist, proba_harmony, X, Y, n_data, distances_def, dict_X, a_solutions, a_orders):
+def update_probas_full(x, y, probas_cb, probas_dist, proba_harmony, X, Y, n_data, distances_def, dict_X, a_solutions, a_orders):
     """
     x: problem given to the user
     y: response of the user
@@ -220,3 +220,16 @@ def update_probas_2(x, y, probas_cb, probas_dist, proba_harmony, X, Y, n_data, d
     
     return updated_probas_cb, updated_probas_dist, updated_probas_harmony_1
         
+
+
+
+def probabilistic_state_transition(x, probas_cb, dict_X, p):
+    """
+    x: New problem
+    probas_cb: List of probabilities for each case to be in the CB
+    dict_X: Indices of cases in CB
+    p: Probability of retention
+    """
+    idx_x = dict_X[x]
+    probas_cb[idx_x] = probas_cb[idx_x] + (1 - probas_cb[idx_x]) * p
+    return probas_cb
