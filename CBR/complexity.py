@@ -35,7 +35,9 @@ def getK_A(a):
 
 def getK_AB(a,b):
     ab = a + ':' + b
-    if ab in complexity_buffer: return complexity_buffer[ab]
+    if ab in complexity_buffer: 
+        #print('using buffer')
+        return complexity_buffer[ab]
     
     # Compute K(A:B)
     result_transf_1 = []
@@ -68,7 +70,9 @@ def getK_AB(a,b):
 
 def getK_AC(a,c):
     ac = a + '::' + c
-    if ac in complexity_buffer: return complexity_buffer[ac]
+    if ac in complexity_buffer: 
+        #print('using buffer')
+        return complexity_buffer[ac]
     
     transformations = []
     varA = []

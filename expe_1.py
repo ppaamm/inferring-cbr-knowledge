@@ -5,6 +5,7 @@ import pandas as pd
 import random
 import seaborn as sns
 import time
+import matplotlib.pyplot as plt
 
 ###############################################################################
 # The user has a fixed CB. 
@@ -80,11 +81,11 @@ def toy():
 ###############################################################################
 
 
-def evaluate(X_s, Y_s, X_t, Y_t, a_solutions, a_distances, a_orders, CB_user, distances_def, probas_cb, probas_dist, proba_harmony):
+def evaluate(X_test, Y_test, a_solutions, a_distances, a_orders, CB_user, distances_def, probas_cb, probas_dist, proba_harmony):
     score = 0
     
-    for tgt in range(len(X_s)):
-        y = Y_t[tgt]
+    for tgt in range(len(X_test)):
+        y = Y_test[tgt]
         
         order = [a_orders[d][tgt] for d in range(len(distances_def))]
         probas = [proba_1nn_total(o, probas_cb) for o in order]
@@ -101,9 +102,10 @@ def evaluate(X_s, Y_s, X_t, Y_t, a_solutions, a_distances, a_orders, CB_user, di
                         else:
                             p += proba_harmony * probas_dist[d] * probas[d][v]
         score += p
-    return score / len(X_s)
+    return score / len(X_test)
 
 
+# Deprecated
 def evaluate2(CB_test, CB_user, distances_def, probas_cb, probas_dist, proba_harmony):
     score = 0
     for case in CB_test:
@@ -146,6 +148,8 @@ def evaluate2(CB_test, CB_user, distances_def, probas_cb, probas_dist, proba_har
 
 start_time = time.time()
 
+print("Loading data")
+
 df = pd.read_csv ("./data/FI/Genitive/gen.txt")
 df = df[df.genitive != '—']
 df = df[df.genitive != '–']
@@ -164,7 +168,9 @@ distances_def = [retrieval.dist2, retrieval.dist3, retrieval.dist5]
 
 # User definition:
 
-n_user = 5
+print("Creation of the user")
+
+n_user = 10
 
 # CB contains all the possible cases that the user could know
 CB = pd.concat([type2.sample(n=n_user),
@@ -178,7 +184,7 @@ Y = [z[1] for z in CB]
 n_words = len(CB)
 
 # TODO: Choice of indices
-known_indices = [0,5,10]
+known_indices = [0, 5, 11, 13, 18, 25]
 
 # CB_user contains the cases that the user actually knows
 CB_user = [CB[i] for i in known_indices]
@@ -192,7 +198,9 @@ harmony_user = True
 
 # Initialization of the test:
 
-n_test = 2
+print("Initialization of the test")
+
+n_test = 25
 
 CB_test = pd.concat([type2.sample(n=n_test),
                        type11.sample(n=n_test),
@@ -209,15 +217,22 @@ a_solutions_test, a_distances_test, a_orders_test = init(X_user, Y_user, X_test,
 
 
 
+# Evaluating the user on the test base
+
+print("Evaluation of the user")
+
+Y_test_user = []
+for x in X_test:
+    source, _ = retrieval.retrieval(CB_user, x, distance_user)
+    Y_test_user.append(adaptation(source[0][0], source[0][1], x, harmony_user))
 
 
 
 # Teaching
 
+print("Starting the teaching")
 
-
-
-n_teach = 5
+n_teach = 20
 CB_teach = pd.concat([type2.sample(n=n_teach),
                       type11.sample(n=n_teach),
                       type38.sample(n=n_teach),
@@ -238,7 +253,7 @@ p_harmony = []
 p_d0 = []
 p_d1 = []
 p_d2 = []
-
+scores = []
 
 n_runs = 20
 
@@ -259,6 +274,8 @@ for r in range(n_runs):
     p_d0.append(probas_dist[0])
     p_d1.append(probas_dist[1])
     p_d2.append(probas_dist[2])
+    scores.append(evaluate(X_test, Y_test_user, a_solutions_test, a_distances_test, a_orders_test, CB_user, distances_def, probas_cb, probas_dist, proba_harmony))
+    
     
     for i in range(n_words_teach):
         #print("word", i)
@@ -275,6 +292,7 @@ for r in range(n_runs):
         p_d0.append(probas_dist[0])
         p_d1.append(probas_dist[1])
         p_d2.append(probas_dist[2])
+        scores.append(evaluate(X_test, Y_test_user, a_solutions_test, a_distances_test, a_orders_test, CB_user, distances_def, probas_cb, probas_dist, proba_harmony))
 
 
 # Plot
@@ -287,6 +305,10 @@ df = pd.DataFrame(data={'run': runs, 'step': steps, 'p_d0': p_d0, 'p_d1': p_d1, 
 sns.lineplot(x='step', y='value', hue='variable', 
              data=pd.melt(df, id_vars = ['step', 'run']))
 
+plt.figure()
+
+df = pd.DataFrame(data={'run': runs, 'step': steps, 'score': scores})
+sns.lineplot(x='step', y='score', data=df)
 
 
 # ------- Only for testing
