@@ -28,9 +28,18 @@ def proba_1nn_base(order, j, probas_cb):
     
 
 def proba_1nn(order, j, i, i_proba, probas_cb):
-    probas_cb_new = copy.copy(probas_cb)
-    probas_cb_new[i] = i_proba
-    return proba_1nn_base(order, j, probas_cb_new)
+    proba = 1
+    for l in order:
+        if l == j: 
+            if j == i:
+                return proba * i_proba
+            else:
+                return proba * probas_cb[j]
+        else:
+            if l == i:
+                proba *= (1 - i_proba)
+            else:
+                proba *= (1 - probas_cb[l]) 
 
 
 def adaptation(A, B, C, harmony):
