@@ -242,3 +242,65 @@ def probabilistic_state_transition(x, probas_cb, dict_X, p):
     idx_x = dict_X[x]
     probas_cb[idx_x] = probas_cb[idx_x] + (1 - probas_cb[idx_x]) * p
     return probas_cb
+
+
+
+
+
+###############################################################################
+
+
+def evaluate(X_test, Y_test, a_solutions, a_distances, a_orders, CB_user, distances_def, probas_cb, probas_dist, proba_harmony):
+    score = 0
+    
+    for tgt in range(len(X_test)):
+        y = Y_test[tgt]
+        
+        order = [a_orders[d][tgt] for d in range(len(distances_def))]
+        probas = [proba_1nn_total(o, probas_cb) for o in order]
+        
+        p = 0
+        for h in range(2):
+            sol = a_solutions[h][tgt]
+            if y in sol:
+                indices = [idx for idx, f in enumerate(sol) if f == y] # indexes of NN yielding solution y
+                for v in indices:
+                    for d in range(len(distances_def)):
+                        if (h==0):
+                            p += (1 - proba_harmony) * probas_dist[d] * probas[d][v]
+                        else:
+                            p += proba_harmony * probas_dist[d] * probas[d][v]
+        score += p
+    return score / len(X_test)
+
+
+# Deprecated
+def evaluate_old(CB_test, CB_user, distances_def, probas_cb, probas_dist, proba_harmony):
+    score = 0
+    for case in CB_test:
+        x = case[0]
+        y = case[1]
+        
+        # Retrieval 
+        distances = [[d(learnt_case, x) for learnt_case in CB_user] for d in distances_def]
+        order = [np.argsort(distances[d]) for d in range(3)]
+        probas = [proba_1nn_total(o, probas_cb) for o in order]
+
+        results = {}
+        
+        for i in range(len(CB_user)):
+            print(i)
+            for d in range(len(distances)):
+                result_h_1 = adaptation(CB_user[i][0], CB_user[i][1], x, True)
+                p = proba_harmony * probas_dist[d] * probas[d][i]
+                if result_h_1 in results:
+                    results[result_h_1] += p
+                else: results[result_h_1] = p
+                
+                result_h_0 = adaptation(CB_user[i][0], CB_user[i][1], x, False)
+                p = (1 - proba_harmony) * probas_dist[d] * probas[d][i]
+                if result_h_0 in results:
+                    results[result_h_0] += p
+                else: results[result_h_0] = p
+        if y in results: score += results[y]
+    return score / len(CB_test)
