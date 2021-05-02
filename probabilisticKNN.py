@@ -2,10 +2,12 @@ import numpy as np
 
 def probabilisticKNN(k, probas, distances, n_simu=100):
     if k == 1: return probabilistic1NN(probas, distances)
-    return probabilistic_largekNN(k, probas, distances, n_simu)
+    return probabilistickNN_MC(k, probas, distances, n_simu)
 
 
 
+# Exact result for k=1
+# Returns the probability that 1NN returns each point of the CB
 def probabilistic1NN(probas, distances):
     N = len(probas)
     order = np.argsort(distances)
@@ -20,7 +22,10 @@ def probabilistic1NN(probas, distances):
     return result_proba
 
 
-def probabilistic_largekNN(k, probas, distances, n_simu):
+
+# Monte-Carlo approximation
+# Returns the probability that kNN returns each point of the CB
+def probabilistickNN_MC(k, probas, distances, n_simu):
     N = len(probas)
     order = np.argsort(distances)
     
@@ -38,9 +43,7 @@ def probabilistic_largekNN(k, probas, distances, n_simu):
     return result_proba
 
 
-
-
-
+# Randomly draws a CB using the specified probabilities
 def drawCB(probas):
     if all(p == 0 for p in probas): return probas
     while(True):
@@ -48,3 +51,19 @@ def drawCB(probas):
         if max(result) > 0: return result
 
 
+
+
+##### Example
+
+from CBR import retrieval
+
+CB = [['koira', 'koiran'], ['alue', 'alueen'], ['ruis', 'rukiin'], ['rakkaus', 'rakkauden'], ['lato', 'ladon']]
+
+
+probas = [.2, .5, .3, .7, .9]
+new_problem = "kissa"
+distances = [retrieval.dist5(case, new_problem) for case in CB]
+
+print(probabilistickNN_MC(1, probas, distances, 5000))
+print(probabilistickNN_MC(2, probas, distances, 5000))
+print(probabilistickNN_MC(3, probas, distances, 5000))

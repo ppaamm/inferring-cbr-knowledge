@@ -121,7 +121,7 @@ def scrapCaseWiktionary(word, case):
 ############################################################################
 
 
-def scrap(name, short_name, case_fi, case_en):
+def scrap(name, short_name, case_fi, case_en, range_a=2000):
     """
     name: Genitive
     short_name: gen
@@ -134,7 +134,7 @@ def scrap(name, short_name, case_fi, case_en):
     df = df[df[1] != -1]
     df.reset_index(inplace=True, drop=True)
     
-    range_a = int(sys.argv[1])
+    
     # 2000
     range_b = min(range_a + 999, df.shape[0]-1)
     print(range_b)
