@@ -43,6 +43,9 @@ def proba_1nn(order, j, i, i_proba, probas_cb):
 
 
 def adaptation(A, B, C, harmony):
+    """
+    Deprecated
+    """
     D = analogy.solveAnalogy(A, B, C)[0][0][0]
     if harmony:
         if "a" in C or "o" in C or "u" in C:
@@ -98,10 +101,6 @@ def update_probas_no_harmony(x, y, probas_cb, probas_dist, X, Y, n_data, distanc
     
     # Step 1: Re-order the CB by similarity (common step)
     
-    # ab = [[X[i], Y[i]] for i in range(n_data)]
-    # distances = [[d(case, x) for case in ab] for d in distances_def]
-    # order = [np.argsort(distances[d]) for d in range(3)]
-    
     idx_x = dict_X[x]
     order = [a_orders[d][idx_x] for d in range(len(distances_def))]
     
@@ -148,7 +147,7 @@ def update_probas_full(x, y, probas_cb, probas_dist, proba_harmony, X, Y, n_data
     y: response of the user
     """
     
-    updated_probas_cb = np.zeros(n_data)
+    updated_probas_cb = np.zeros(n_data)    
     
     # Step 1: Re-order the CB by similarity (common step)
     
@@ -170,7 +169,7 @@ def update_probas_full(x, y, probas_cb, probas_dist, proba_harmony, X, Y, n_data
             # if harmony
             likelihood_adapt = 0
             # if adaptation(X[j], Y[j], x, True) == y:
-            if a_solutions[1][idx_x][j] == y:
+            if a_solutions[1][idx_x][j] == y: 
                  likelihood_adapt += proba_harmony
             # if adaptation(X[j], Y[j], x, False) == y:
             if a_solutions[0][idx_x][j] == y:
@@ -183,7 +182,11 @@ def update_probas_full(x, y, probas_cb, probas_dist, proba_harmony, X, Y, n_data
         
         proba_1 = likelihood_result_1 * probas_cb[i]
         proba_0 = likelihood_result_0 * (1 - probas_cb[i])
-        updated_probas_cb[i] = proba_1 / (proba_1 + proba_0)
+        #TODO: is the following condition enough?
+        if probas_cb[i] != 0:
+            #print(x,y,X[i])
+            #print(likelihood_result_0, likelihood_result_1)
+            updated_probas_cb[i] = proba_1 / (proba_1 + proba_0)
         
     # Updating distance
     
@@ -228,7 +231,42 @@ def update_probas_full(x, y, probas_cb, probas_dist, proba_harmony, X, Y, n_data
     updated_probas_harmony_1 = updated_probas_harmony_1 / (updated_probas_harmony_1 + updated_probas_harmony_0)
     
     return updated_probas_cb, updated_probas_dist, updated_probas_harmony_1
+
+
+
+
+
+
+def update_probas_states(x, y, probas_state, X, Y, n_data, states, dict_X, a_solutions, a_orders):
+    """
+    x: problem given to the user
+    y: response of the user
+    """
+    
+    n_states = probas_state.shape[0]
+    updated_probas = np.zeros(n_states)
+    
+    y_i = ""
+    
+    idx_x = dict_X[x]
+    
+    for i in range(n_states):
+        # Is CBR(x,s[i]) = y?
+        distance = states[i]['distance']
+        harmony = states[i]['harmony']
+        cases = states[i]['cases']
         
+        for j in a_orders[distance][idx_x]:
+            if j in cases:
+                NN = a_orders[distance][idx_x][j]
+                y_i = a_solutions[harmony][idx_x][NN]
+                continue
+        if y_i == y:
+            updated_probas[i] = 1
+    
+    return updated_probas / np.sum(updated_probas)
+
+     
 
 
 
@@ -276,6 +314,9 @@ def evaluate(X_test, Y_test, a_solutions, a_distances, a_orders, CB_user, distan
 
 # Deprecated
 def evaluate_old(CB_test, CB_user, distances_def, probas_cb, probas_dist, proba_harmony):
+    """
+    Deprecated
+    """
     score = 0
     for case in CB_test:
         x = case[0]
