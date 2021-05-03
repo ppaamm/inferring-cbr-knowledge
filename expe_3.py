@@ -60,7 +60,7 @@ transition_proba = .6
 
 print("Initialization of the test")
 
-n_test = 1
+n_test = 10
 
 CB_test = pd.concat([type2.sample(n=n_test),
                        type11.sample(n=n_test),
@@ -93,7 +93,7 @@ Y_test = [z[1] for z in CB_test]
 
 print("Initialisation of the teaching corpus")
 
-n_teach = 1
+n_teach = 5
 CB_teach = pd.concat([type2.sample(n=n_teach),
                       type11.sample(n=n_teach),
                       type38.sample(n=n_teach),
@@ -102,7 +102,7 @@ CB_teach = pd.concat([type2.sample(n=n_teach),
 CB_teach = CB_teach.filter(items = ['nominative','genitive']).values.tolist()
 n_words_teach = len(CB_teach)
 X_teach = [z[0] for z in CB_teach]
-Y_teach = [z[0] for z in CB_teach]
+Y_teach = [z[1] for z in CB_teach]
 dict_X = {X_teach[i]:i for i in range(len(X_teach))}
 
 a_solutions, a_distances, a_orders = init(X_teach, Y_teach, X_teach, distances_def)
@@ -129,7 +129,7 @@ for r in range(n_runs):
     
     # Priors
 
-    probas_cb = .5 * np.ones(len(CB_teach))
+    probas_cb = np.zeros(len(CB_teach))
     probas_dist = np.ones(len(distances_def)) / len(distances_def)
     proba_harmony = .5
     
