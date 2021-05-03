@@ -53,7 +53,14 @@ Y_user = []
 
 distance_user = distances_def[2]
 harmony_user = True
-transition_proba = .6
+transition_proba_estimated = .2   # Transition proba used by the teacher
+
+def retention_user(i, success):
+    if (success and np.random.rand() < .5) or (not(success) and np.random.rand() < .8):
+        CB_user.append(CB_teach[i])
+        X_user.append(CB_teach[i][0])
+        Y_user.append(CB_teach[i][1])
+        
 
 
 # Initialization of the test:
@@ -67,7 +74,9 @@ CB_test = pd.concat([type2.sample(n=n_test),
                        type38.sample(n=n_test),
                        type41.sample(n=n_test)])
 
-CB_test = CB_test.filter(items = ['nominative','genitive']).values.tolist()  
+CB_test = CB_test.filter(items = ['nominative','genitive']).values.tolist()
+
+
 
 
 X_test = [z[0] for z in CB_test]
@@ -93,7 +102,7 @@ Y_test = [z[1] for z in CB_test]
 
 print("Initialisation of the teaching corpus")
 
-n_teach = 5
+n_teach = 4
 CB_teach = pd.concat([type2.sample(n=n_teach),
                       type11.sample(n=n_teach),
                       type38.sample(n=n_teach),
@@ -163,12 +172,9 @@ for r in range(n_runs):
         probas_cb, probas_dist, proba_harmony = update_probas_full(x, y, probas_cb, probas_dist, proba_harmony, X_teach, Y_teach, n_words_teach, distances_def, dict_X, a_solutions, a_orders)
         
         # Update
-        probas_cb = probabilistic_state_transition(x, probas_cb, dict_X, transition_proba)
+        probas_cb = probabilistic_state_transition(x, probas_cb, dict_X, transition_proba_estimated)
         
-        if np.random.rand() < transition_proba:
-            CB_user.append(CB_teach[randomized[i]])
-            X_user.append(CB_teach[randomized[i]][0])
-            Y_user.append(CB_teach[randomized[i]][1])
+        retention_user(randomized[i], y == CB_teach[randomized[i]][1])
         
         runs.append(r)
         steps.append(i+1)        

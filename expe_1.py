@@ -114,7 +114,7 @@ distances_def = [retrieval.dist2, retrieval.dist3, retrieval.dist5]
 
 print("Creation of the user")
 
-n_user = 10
+n_user = 1
 
 # CB contains all the possible cases that the user could know
 CB = pd.concat([type2.sample(n=n_user),
@@ -128,7 +128,7 @@ Y = [z[1] for z in CB]
 n_words = len(CB)
 
 # TODO: Choice of indices
-known_indices = [0, 5, 11, 13, 18, 25]
+known_indices = [0, 1, 2]
 
 # CB_user contains the cases that the user actually knows
 CB_user = [CB[i] for i in known_indices]
@@ -144,7 +144,7 @@ harmony_user = True
 
 print("Initialization of the test")
 
-n_test = 25
+n_test = 1
 
 CB_test = pd.concat([type2.sample(n=n_test),
                        type11.sample(n=n_test),
@@ -177,7 +177,7 @@ for x in X_test:
 
 print("Initialisation of the teaching corpus")
 
-n_teach = 20
+n_teach = 10
 CB_teach = pd.concat([type2.sample(n=n_teach),
                       type11.sample(n=n_teach),
                       type38.sample(n=n_teach),
@@ -202,7 +202,7 @@ p_d1 = []
 p_d2 = []
 scores = []
 
-n_runs = 20
+n_runs = 100
 
 for r in range(n_runs):
     print(r)
