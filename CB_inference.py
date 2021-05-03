@@ -264,6 +264,8 @@ def update_probas_states(x, y, probas_state, X, Y, n_data, states, dict_X, a_sol
         if y_i == y:
             updated_probas[i] = 1
     
+    updated_probas = updated_probas * probas_state
+    
     return updated_probas / np.sum(updated_probas)
 
      
