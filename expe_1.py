@@ -6,6 +6,10 @@ import random
 import seaborn as sns
 import time
 import matplotlib.pyplot as plt
+import datasaver
+import datetime
+
+
 
 ###############################################################################
 # The user has a fixed CB. 
@@ -94,9 +98,9 @@ start_time = time.time()
 
 print("Loading data")
 
-df = pd.read_csv ("./data/FI/Genitive/gen.txt")
-df = df[df.genitive != '—']
-df = df[df.genitive != '–']
+df = pd.read_csv ("./data/FI/Inessive/ine.txt")
+df = df[df.inessive != '—']
+df = df[df.inessive != '–']
 
 
 type2 = df[df.type == 2]
@@ -112,29 +116,7 @@ distances_def = [retrieval.dist2, retrieval.dist3, retrieval.dist5]
 
 # User definition:
 
-print("Creation of the user")
 
-n_user = 1
-
-# CB contains all the possible cases that the user could know
-CB = pd.concat([type2.sample(n=n_user),
-                type11.sample(n=n_user),
-                type38.sample(n=n_user),
-                type41.sample(n=n_user)])
-
-CB = CB.filter(items = ['nominative','genitive']).values.tolist()  
-X = [z[0] for z in CB]
-Y = [z[1] for z in CB]
-n_words = len(CB)
-
-# TODO: Choice of indices
-known_indices = [0, 1, 2]
-
-# CB_user contains the cases that the user actually knows
-CB_user = [CB[i] for i in known_indices]
-
-X_user = [z[0] for z in CB_user]
-Y_user = [z[1] for z in CB_user]
 
 distance_user = distances_def[2]
 harmony_user = True
@@ -151,44 +133,17 @@ CB_test = pd.concat([type2.sample(n=n_test),
                        type38.sample(n=n_test),
                        type41.sample(n=n_test)])
 
-CB_test = CB_test.filter(items = ['nominative','genitive']).values.tolist()  
+CB_test = CB_test.filter(items = ['nominative','inessive']).values.tolist()  
 
 
 X_test = [z[0] for z in CB_test]
 Y_test = [z[1] for z in CB_test]
 
-a_solutions_test, a_distances_test, a_orders_test = init(X_user, Y_user, X_test, distances_def)
 
 
 
-# Evaluating the user on the test base
-
-print("Evaluation of the user")
-
-Y_test_user = []
-for x in X_test:
-    source, _ = retrieval.retrieval(CB_user, x, distance_user)
-    Y_test_user.append(adaptation(source[0][0], source[0][1], x, harmony_user))
 
 
-
-# Teaching
-
-
-print("Initialisation of the teaching corpus")
-
-n_teach = 10
-CB_teach = pd.concat([type2.sample(n=n_teach),
-                      type11.sample(n=n_teach),
-                      type38.sample(n=n_teach),
-                      type41.sample(n=n_teach)])
-
-CB_teach = CB_teach.filter(items = ['nominative','genitive']).values.tolist()
-n_words_teach = len(CB_teach)
-X_teach = [z[0] for z in CB_teach]
-dict_X = {X_teach[i]:i for i in range(len(X_teach))}
-
-a_solutions, a_distances, a_orders = init(X, Y, X_teach, distances_def)
 
 
 print("Starting the teaching")
@@ -202,11 +157,71 @@ p_d1 = []
 p_d2 = []
 scores = []
 
-n_runs = 100
+n_runs = 10
 
 for r in range(n_runs):
     print(r)
     
+    
+    ###########################################################################
+    print("Creation of the user")
+
+    n_user = 1
+    
+    # CB contains all the possible cases that the user could know
+    CB = pd.concat([type2.sample(n=n_user),
+                    type11.sample(n=n_user),
+                    type38.sample(n=n_user),
+                    type41.sample(n=n_user)])
+    
+    CB = CB.filter(items = ['nominative','inessive']).values.tolist()  
+    X = [z[0] for z in CB]
+    Y = [z[1] for z in CB]
+    n_words = len(CB)
+    
+    # TODO: Choice of indices
+    known_indices = [0, 1, 2]
+    
+    # CB_user contains the cases that the user actually knows
+    CB_user = [CB[i] for i in known_indices]
+    
+    X_user = [z[0] for z in CB_user]
+    Y_user = [z[1] for z in CB_user]
+    
+    
+    ###########################################################################
+    # Testing the user
+    
+    print("Evaluation of the user")
+    
+    a_solutions_test, a_distances_test, a_orders_test = init(X_user, Y_user, X_test, distances_def)
+
+    # Evaluating the user on the test base 
+    
+    Y_test_user = []
+    for x in X_test:
+        source, _ = retrieval.retrieval(CB_user, x, distance_user)
+        Y_test_user.append(adaptation(source[0][0], source[0][1], x, harmony_user))
+        
+        
+    ###########################################################################
+    # Teacher's CB
+    
+    print("Initialisation of the teaching corpus")
+
+    n_teach = 2
+    CB_teach = pd.concat([type2.sample(n=n_teach),
+                          type11.sample(n=n_teach),
+                          type38.sample(n=n_teach),
+                          type41.sample(n=n_teach)])
+    
+    CB_teach = CB_teach.filter(items = ['nominative','genitive']).values.tolist()
+    n_words_teach = len(CB_teach)
+    X_teach = [z[0] for z in CB_teach]
+    dict_X = {X_teach[i]:i for i in range(len(X_teach))}
+    
+    a_solutions, a_distances, a_orders = init(X, Y, X_teach, distances_def)
+        
     # Priors
 
     probas_cb = .5 * np.ones(len(CB))
@@ -246,14 +261,53 @@ for r in range(n_runs):
 
 
 print("--- %s seconds ---" % (time.time() - start_time))
-        
-df = pd.DataFrame(data={'run': runs, 'step': steps, 'p_d0': p_d0, 'p_d1': p_d1, 'p_d2': p_d2})
 
-sns.lineplot(x='step', y='value', hue='variable', 
-             data=pd.melt(df, id_vars = ['step', 'run']))
+
+dt_string = 'expe1-' +  datetime.datetime.now().strftime("%d-%m-%Y-%H-%M-%S")
+
+
+# Figure 1
+
+plt.figure()
+        
+df = pd.DataFrame(data={'run': runs, 'step': steps, 'd0': p_d0, 'd1': p_d1, 'd2': p_d2})
+
+sns.lineplot(x='step', y='probability', hue='distance', 
+             data=pd.melt(df, id_vars = ['step', 'run'], value_name='probability', var_name='distance'))
+
+plt.savefig(dt_string + '-fig1.png')
+
+
+# Figure 2
 
 plt.figure()
 
 df = pd.DataFrame(data={'run': runs, 'step': steps, 'score': scores})
 sns.lineplot(x='step', y='score', data=df)
 
+plt.savefig(dt_string + '-fig2.png')
+
+
+plt.figure()
+df = pd.DataFrame(data={'run': runs, 'step': steps, 'harmony': p_harmony})
+sns.lineplot(x='step', y='harmony', data=df)
+
+plt.savefig(dt_string + '-fig3.png')
+
+
+# Figure 4
+
+plt.figure()
+        
+df = pd.DataFrame(data={'run': runs, 'step': steps, 'd0': p_d0, 'd1': p_d1, 'd2': p_d2, 'harmony': p_harmony})
+
+sns.lineplot(x='step', y='probability', hue='parameter', 
+             data=pd.melt(df, id_vars = ['step', 'run'], value_name='probability', var_name='parameter'))
+
+plt.savefig(dt_string + '-fig4.png')
+
+
+data = {'run': runs, 'step': steps, 'd0': p_d0, 'd1': p_d1, 'd2': p_d2, 'harmony': p_harmony, 'score': scores,
+        'n_words': n_words, 'n_user': len(known_indices), 'n_teacher': len(CB_teach), 'n_test': len(CB_test)}
+
+datasaver.save(data, 1)
