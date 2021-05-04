@@ -10,6 +10,17 @@ import copy
 
 
 def proba_1nn_total(order, probas_cb):
+    length = sum(len(L) for L in order)
+    probas = np.zeros(length)
+    proba = 1
+    #TODO: 
+    for L in order:
+        for k in L: probas[k] = proba * probas_cb[k] / len(L)
+        for k in L: proba *= (1- probas_cb[k])
+    return probas
+
+
+def proba_1nn_total_deprecated(order, probas_cb):
     probas = np.zeros(len(order))
     proba = 1
     for l in order:
@@ -18,16 +29,39 @@ def proba_1nn_total(order, probas_cb):
     return probas
 
 
-def proba_1nn_base(order, j, probas_cb):
+def proba_1nn_base(order, j, probas_cb, n_mc=100):
     proba = 1
-    for l in order:
-        if l == j: 
-            return proba * probas_cb[j]
+    for L in order:
+        if j in L: 
+            #TODO
+            return proba * probas_cb[j] / len(L)
         else:
-            proba *= (1 - probas_cb[l])
+            for k in L: proba *= (1 - probas_cb[k]) 
     
 
+def proba_1nn_aborted_attempt(order, j, i, i_proba, probas_cb):
+    proba = 1
+    for L in order:
+        if j in L: 
+            if j == i:
+                return proba * i_proba
+            else:
+                return proba * probas_cb[j]
+        else:
+            if i in L:
+                proba *= (1 - i_proba)
+            else:
+                for k in L: proba *= (1 - probas_cb[k]) 
+                
+   
+
 def proba_1nn(order, j, i, i_proba, probas_cb):
+    probas_cb_new = copy.copy(probas_cb)
+    probas_cb_new[i] = i_proba
+    return proba_1nn_base(order, j, probas_cb_new)
+
+             
+def proba_1nn_old(order, j, i, i_proba, probas_cb):
     proba = 1
     for l in order:
         if l == j: 
@@ -40,6 +74,8 @@ def proba_1nn(order, j, i, i_proba, probas_cb):
                 proba *= (1 - i_proba)
             else:
                 proba *= (1 - probas_cb[l]) 
+                
+
 
 
 def adaptation(A, B, C, harmony):
@@ -71,6 +107,20 @@ def apply_harmony(C, D, harmony):
     return D    
 
 
+
+def order_duplicate(L):
+    order = np.argsort(L)
+    prev = -1
+    result = []
+    for i in order:
+        if L[i] == prev:
+            result[-1].append(i)
+        else:
+            prev = L[i]
+            result.append([i])
+    return result
+
+
 def init(A, B, C, distances_def):
     
     # compute solutions analogy
@@ -86,7 +136,8 @@ def init(A, B, C, distances_def):
         for i in range(len(C)):
             a_distances[idx_d][i] = np.array([d([A[f], B[f]], C[i]) for f in range(len(A))])    
     
-    a_orders = np.argsort(a_distances, axis=2)
+    #a_orders = np.argsort(a_distances, axis=2)
+    a_orders = [[order_duplicate(a_distances[d][x]) for x in  range(len(a_distances[d]))] for d in range(len(distances_def))]
     
     return a_solutions, a_distances, a_orders
 
@@ -174,19 +225,26 @@ def update_probas_full(x, y, probas_cb, probas_dist, proba_harmony, X, Y, n_data
             # if adaptation(X[j], Y[j], x, False) == y:
             if a_solutions[0][idx_x][j] == y:
                  likelihood_adapt += (1 - proba_harmony)
+
             
-            
-            for d in range(3):    
+            for d in range(3):                
                 likelihood_result_1 += likelihood_adapt * proba_1nn(order[d], j, i, 1, probas_cb) * probas_dist[d]
                 likelihood_result_0 += likelihood_adapt * proba_1nn(order[d], j, i, 0, probas_cb) * probas_dist[d]
+
         
         proba_1 = likelihood_result_1 * probas_cb[i]
         proba_0 = likelihood_result_0 * (1 - probas_cb[i])
         #TODO: is the following condition enough?
-        if probas_cb[i] != 0:
-            #print(x,y,X[i])
-            #print(likelihood_result_0, likelihood_result_1)
-            updated_probas_cb[i] = proba_1 / (proba_1 + proba_0)
+#        if probas_cb[i] != 0:
+#            #print(x,y,X[i])
+#            #print(likelihood_result_0, likelihood_result_1)
+#            #TODO: problem
+#            if proba_1 + proba_0 == 0: 
+#                print(i, j, likelihood_adapt, proba_1nn(order[d], j, i, 1, probas_cb), proba_1nn(order[d], j, i, 0, probas_cb))
+#                return "toto"
+#                updated_probas_cb[i] = probas_cb[i]
+#            else: updated_probas_cb[i] = proba_1 / (proba_1 + proba_0)
+        updated_probas_cb[i] = proba_1 / (proba_1 + proba_0)
         
     # Updating distance
     
@@ -228,6 +286,13 @@ def update_probas_full(x, y, probas_cb, probas_dist, proba_harmony, X, Y, n_data
     
     updated_probas_harmony_1 = likelihood_result[1] * proba_harmony
     updated_probas_harmony_0 = likelihood_result[0] * (1 - proba_harmony)
+    
+    #TODO: The following line has nothing to do here, right??
+    #updated_probas_cb[i] = probas_cb[i]
+#    if updated_probas_harmony_1 + updated_probas_harmony_0 == 0: 
+#        updated_probas_harmony_1 = proba_harmony
+#    else:
+#        updated_probas_harmony_1 = updated_probas_harmony_1 / (updated_probas_harmony_1 + updated_probas_harmony_0)
     updated_probas_harmony_1 = updated_probas_harmony_1 / (updated_probas_harmony_1 + updated_probas_harmony_0)
     
     return updated_probas_cb, updated_probas_dist, updated_probas_harmony_1
