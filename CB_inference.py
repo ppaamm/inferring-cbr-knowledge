@@ -113,7 +113,7 @@ def update_probas_no_harmony(x, y, probas_cb, probas_dist, X, Y, n_data, distanc
         for j in range(n_data):
             # if analogy.solveAnalogy(X[j], Y[j], x)[0][0][0] != y: 
             if a_solutions[0][idx_x][j] != y: 
-                continue
+                break
             for d in range(3):    
                 likelihood_result_1 += proba_1nn(order[d], j, i, 1, probas_cb) * probas_dist[d]
                 likelihood_result_0 += proba_1nn(order[d], j, i, 0, probas_cb) * probas_dist[d]
@@ -127,7 +127,7 @@ def update_probas_no_harmony(x, y, probas_cb, probas_dist, X, Y, n_data, distanc
     likelihood_result = np.array([0.0, 0.0, 0.0])
     for j in range(n_data):
         if a_solutions[0][idx_x][j] != y: 
-            continue
+            break
         for d in range(3):
             likelihood_result[d] += proba_1nn_base(order[d], j, probas_cb)
     
@@ -260,7 +260,7 @@ def update_probas_states(x, y, probas_state, X, Y, n_data, states, dict_X, a_sol
             if j in cases:
                 NN = a_orders[distance][idx_x][j]
                 y_i = a_solutions[harmony][idx_x][NN]
-                continue
+                break
         if y_i == y:
             updated_probas[i] = 1
     
