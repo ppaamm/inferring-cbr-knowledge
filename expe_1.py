@@ -103,10 +103,11 @@ df = df[df.inessive != '—']
 df = df[df.inessive != '–']
 
 
-type2 = df[df.type == 2]
-type11 = df[df.type == 11]
-type38 = df[df.type == 38]
-type41 = df[df.type == 41]
+#type2 = df[df.type == 2]
+#type11 = df[df.type == 11]
+#type38 = df[df.type == 38]
+#type41 = df[df.type == 41]
+type48 = df[df.type == 48]
 
 
 # Parameters
@@ -119,27 +120,26 @@ distances_def = [retrieval.dist2, retrieval.dist3, retrieval.dist5]
 
 
 distance_user = distances_def[2]
-harmony_user = True
+harmony_user = False
 
 
 # Initialization of the test:
 
 print("Initialization of the test")
 
-n_test = 1
+n_test = 100
+CB_test = type48.sample(n=n_test)
 
-CB_test = pd.concat([type2.sample(n=n_test),
-                       type11.sample(n=n_test),
-                       type38.sample(n=n_test),
-                       type41.sample(n=n_test)])
+#CB_test = pd.concat([type2.sample(n=n_test),
+#                       type11.sample(n=n_test),
+#                       type38.sample(n=n_test),
+#                       type41.sample(n=n_test)])
 
 CB_test = CB_test.filter(items = ['nominative','inessive']).values.tolist()  
 
 
 X_test = [z[0] for z in CB_test]
 Y_test = [z[1] for z in CB_test]
-
-
 
 
 
@@ -157,7 +157,7 @@ p_d1 = []
 p_d2 = []
 scores = []
 
-n_runs = 10
+n_runs = 20
 
 for r in range(n_runs):
     print(r)
@@ -166,21 +166,23 @@ for r in range(n_runs):
     ###########################################################################
     print("Creation of the user")
 
-    n_user = 1
+    n_user = 100
     
     # CB contains all the possible cases that the user could know
-    CB = pd.concat([type2.sample(n=n_user),
-                    type11.sample(n=n_user),
-                    type38.sample(n=n_user),
-                    type41.sample(n=n_user)])
-    
+#    CB = pd.concat([type2.sample(n=n_user),
+#                    type11.sample(n=n_user),
+#                    type38.sample(n=n_user),
+#                    type41.sample(n=n_user)])
+        
+    CB = type48.sample(n=n_user)    
     CB = CB.filter(items = ['nominative','inessive']).values.tolist()  
     X = [z[0] for z in CB]
     Y = [z[1] for z in CB]
     n_words = len(CB)
     
     # TODO: Choice of indices
-    known_indices = [0, 1, 2]
+    n_known = 30
+    known_indices = list(np.random.permutation(n_user))[:n_known]
     
     # CB_user contains the cases that the user actually knows
     CB_user = [CB[i] for i in known_indices]
@@ -209,13 +211,16 @@ for r in range(n_runs):
     
     print("Initialisation of the teaching corpus")
 
-    n_teach = 2
-    CB_teach = pd.concat([type2.sample(n=n_teach),
-                          type11.sample(n=n_teach),
-                          type38.sample(n=n_teach),
-                          type41.sample(n=n_teach)])
+    n_teach = 50
+#    CB_teach = pd.concat([type2.sample(n=n_teach),
+#                          type11.sample(n=n_teach),
+#                          type38.sample(n=n_teach),
+#                          type41.sample(n=n_teach)])
     
-    CB_teach = CB_teach.filter(items = ['nominative','genitive']).values.tolist()
+#    CB_teach = CB_teach.filter(items = ['nominative','genitive']).values.tolist()
+    CB_teach = type48.sample(n=n_teach)    
+    CB_teach = CB_teach.filter(items = ['nominative','inessive']).values.tolist()  
+    
     n_words_teach = len(CB_teach)
     X_teach = [z[0] for z in CB_teach]
     dict_X = {X_teach[i]:i for i in range(len(X_teach))}
@@ -238,6 +243,8 @@ for r in range(n_runs):
     p_d2.append(probas_dist[2])
     scores.append(evaluate(X_test, Y_test_user, a_solutions_test, a_distances_test, a_orders_test, CB_user, distances_def, probas_cb, probas_dist, proba_harmony))
     
+    
+    print("Teaching")
     
     for i in range(n_words_teach):
         #print("word", i)
@@ -309,5 +316,10 @@ plt.savefig(dt_string + '-fig4.png')
 
 data = {'run': runs, 'step': steps, 'd0': p_d0, 'd1': p_d1, 'd2': p_d2, 'harmony': p_harmony, 'score': scores,
         'n_words': n_words, 'n_user': len(known_indices), 'n_teacher': len(CB_teach), 'n_test': len(CB_test)}
+
+print('CB:', n_words)
+print('User:', len(known_indices))
+print('Teacher:', len(CB_teach))
+print('Test:', len(CB_test))
 
 datasaver.save(data, 1)
