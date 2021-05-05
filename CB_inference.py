@@ -412,3 +412,8 @@ def evaluate_old(CB_test, CB_user, distances_def, probas_cb, probas_dist, proba_
                 else: results[result_h_0] = p
         if y in results: score += results[y]
     return score / len(CB_test)
+
+
+
+def compare_probas(probas_cb, probas_cb_user):
+    return np.sum(np.abs(probas_cb_user - probas_cb)) / probas_cb.shape[0]

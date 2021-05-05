@@ -1,5 +1,5 @@
 from CBR import retrieval
-from CB_inference import adaptation, update_probas_full, init, evaluate
+from CB_inference import adaptation, update_probas_full, init, evaluate, compare_probas
 import numpy as np
 import pandas as pd
 import random
@@ -127,7 +127,7 @@ harmony_user = False
 
 print("Initialization of the test")
 
-n_test = 100
+n_test = 10
 CB_test = type48.sample(n=n_test)
 
 #CB_test = pd.concat([type2.sample(n=n_test),
@@ -156,8 +156,9 @@ p_d0 = []
 p_d1 = []
 p_d2 = []
 scores = []
+proba_diff = []
 
-n_runs = 20
+n_runs = 2
 
 for r in range(n_runs):
     print(r)
@@ -166,7 +167,7 @@ for r in range(n_runs):
     ###########################################################################
     print("Creation of the user")
 
-    n_user = 100
+    n_user = 10
     
     # CB contains all the possible cases that the user could know
 #    CB = pd.concat([type2.sample(n=n_user),
@@ -181,7 +182,7 @@ for r in range(n_runs):
     n_words = len(CB)
     
     # TODO: Choice of indices
-    n_known = 30
+    n_known = 3
     known_indices = list(np.random.permutation(n_user))[:n_known]
     
     # CB_user contains the cases that the user actually knows
@@ -189,6 +190,8 @@ for r in range(n_runs):
     
     X_user = [z[0] for z in CB_user]
     Y_user = [z[1] for z in CB_user]
+    
+    probas_cb_user = np.array([1 if i in known_indices else 0 for i in range(n_words)])
     
     
     ###########################################################################
@@ -205,13 +208,19 @@ for r in range(n_runs):
         source, _ = retrieval.retrieval(CB_user, x, distance_user)
         Y_test_user.append(adaptation(source[0][0], source[0][1], x, harmony_user))
         
+    
+    probas_cb_user = np.array([1 if i in known_indices else 0 for i in range(n_words)])
+    probas_dist_user = np.array([0,0,1])
+    proba_harmony_user = 0
         
+    evaluate(X_test, Y_test_user, a_solutions_test, a_distances_test, a_orders_test, CB_user, distances_def, probas_cb_user, probas_dist_user, proba_harmony_user)
+    
     ###########################################################################
     # Teacher's CB
     
     print("Initialisation of the teaching corpus")
 
-    n_teach = 50
+    n_teach = 5
 #    CB_teach = pd.concat([type2.sample(n=n_teach),
 #                          type11.sample(n=n_teach),
 #                          type38.sample(n=n_teach),
@@ -242,6 +251,7 @@ for r in range(n_runs):
     p_d1.append(probas_dist[1])
     p_d2.append(probas_dist[2])
     scores.append(evaluate(X_test, Y_test_user, a_solutions_test, a_distances_test, a_orders_test, CB_user, distances_def, probas_cb, probas_dist, proba_harmony))
+    proba_diff.append(compare_probas(probas_cb, probas_cb_user))
     
     
     print("Teaching")
@@ -261,8 +271,13 @@ for r in range(n_runs):
         p_d0.append(probas_dist[0])
         p_d1.append(probas_dist[1])
         p_d2.append(probas_dist[2])
+        proba_diff.append(compare_probas(probas_cb, probas_cb_user))
         scores.append(evaluate(X_test, Y_test_user, a_solutions_test, a_distances_test, a_orders_test, CB_user, distances_def, probas_cb, probas_dist, proba_harmony))
-
+        
+    data = {'run': runs, 'step': steps, 'd0': p_d0, 'd1': p_d1, 'd2': p_d2, 'harmony': p_harmony, 'score': scores,
+        'n_words': n_words, 'n_user': len(known_indices), 'n_teacher': len(CB_teach), 'n_test': len(CB_test),
+        'p_words': probas_cb, 'X_teach': X_teach, 'CB_user': CB_user}
+    datasaver.save(data, '1-Temp' + str(r))
 
 # Plot
 
@@ -295,6 +310,8 @@ sns.lineplot(x='step', y='score', data=df)
 plt.savefig(dt_string + '-fig2.png')
 
 
+# Figure 3
+
 plt.figure()
 df = pd.DataFrame(data={'run': runs, 'step': steps, 'harmony': p_harmony})
 sns.lineplot(x='step', y='harmony', data=df)
@@ -316,6 +333,16 @@ plt.savefig(dt_string + '-fig4.png')
 
 data = {'run': runs, 'step': steps, 'd0': p_d0, 'd1': p_d1, 'd2': p_d2, 'harmony': p_harmony, 'score': scores,
         'n_words': n_words, 'n_user': len(known_indices), 'n_teacher': len(CB_teach), 'n_test': len(CB_test)}
+
+
+
+# Figure 5
+
+plt.figure()
+df = pd.DataFrame(data={'run': runs, 'step': steps, 'proba_diff': proba_diff})
+sns.lineplot(x='step', y='proba_diff', data=df)
+
+plt.savefig(dt_string + '-fig5.png')
 
 print('CB:', n_words)
 print('User:', len(known_indices))
