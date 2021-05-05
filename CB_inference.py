@@ -311,7 +311,7 @@ def update_probas_states(x, y, probas_state, X, Y, n_data, states, dict_X, a_sol
     n_states = probas_state.shape[0]
     updated_probas = np.zeros(n_states)
     
-    y_i = ""
+    y_i = []
     
     idx_x = dict_X[x]
     
@@ -321,13 +321,19 @@ def update_probas_states(x, y, probas_state, X, Y, n_data, states, dict_X, a_sol
         harmony = states[i]['harmony']
         cases = states[i]['cases']
         
-        for j in a_orders[distance][idx_x]:
-            if j in cases:
-                NN = a_orders[distance][idx_x][j]
-                y_i = a_solutions[harmony][idx_x][NN]
-                break
-        if y_i == y:
-            updated_probas[i] = 1
+        for J in a_orders[distance][idx_x]:
+            #print(J)
+            for j in J:
+                #print(j)
+                if j in cases:
+                    #NN = a_orders[distance][idx_x][j]
+                    #print(NN)
+                    y_i.append(a_solutions[harmony][idx_x][j])
+                
+                if len(y_i) > 0: break
+            
+        if y in y_i:
+            updated_probas[i] = y_i.count(y) / len(y_i)
     
     updated_probas = updated_probas * probas_state
     
