@@ -30,9 +30,9 @@ start_time = time.time()
 
 print("Loading data")
 
-df = pd.read_csv ("./data/FI/Genitive/gen.txt")
-df = df[df.genitive != '—']
-df = df[df.genitive != '–']
+df = pd.read_csv ("./data/FI/Inessive/ine.txt")
+df = df[df.inessive != '—']
+df = df[df.inessive != '–']
 
 
 type2 = df[df.type == 2]
@@ -50,10 +50,8 @@ distances_def = [retrieval.dist2, retrieval.dist3, retrieval.dist5]
 
 print("Creation of the user")
 
-n_user = 1
-
 # CB contains all the possible cases that the user could know
-CB = [["makkara", "makkarassa"], ["metsä", "metsässä"]]
+CB = [["kaura", "kaurassa"], ["käyrä", "käyrässä"]]
 X = [z[0] for z in CB]
 Y = [z[1] for z in CB]
 n_words = len(X)
@@ -70,28 +68,6 @@ Y_user = [z[1] for z in CB_user]
 distance_user = distances_def[2]
 harmony_user = True
 
-
-
-
-# Teaching
-
-
-print("Initialisation of the teaching corpus")
-
-CB_teach = [['koira', 'koirassa'],
-            ['mäyrä', 'mäyrässä'],
-            ['talo', 'talossa'],
-            ['piha', 'pihassa'], 
-            ['kypärä', 'kypärässä'], 
-            ['ryhmä', 'ryhmässä'],
-            ['kallio', 'kalliossa'],
-            ['löyly', 'löylyssä']]
-
-n_words_teach = len(CB_teach)
-X_teach = [z[0] for z in CB_teach]
-dict_X = {X_teach[i]:i for i in range(len(X_teach))}
-
-a_solutions, a_distances, a_orders = init(X, Y, X_teach, distances_def)
 
 
 
@@ -135,10 +111,29 @@ p_state_0 = []
 p_state_1 = []
 p_state_2 = []
 
-n_runs = 50
+n_runs = 20
+
 
 for r in range(n_runs):
     print(r)
+        
+    # Teaching
+
+    n_teach = 20
+    
+    type2 = df[df.type == 2]
+    type11 = df[df.type == 11]
+    #CB_teach = pd.concat([type2.sample(n=n_teach), type11.sample(n=n_teach)])
+    CB_teach = type2.sample(n=n_teach)
+    CB_teach = CB_teach.filter(items = ['nominative','inessive']).values.tolist()  
+    
+    
+    n_words_teach = len(CB_teach)
+    X_teach = [z[0] for z in CB_teach]
+    dict_X = {X_teach[i]:i for i in range(len(X_teach))}
+    
+    a_solutions, a_distances, a_orders = init(X, Y, X_teach, distances_def)
+    
     
     # Priors
 
@@ -174,12 +169,12 @@ for r in range(n_runs):
 print("--- %s seconds ---" % (time.time() - start_time))
 
 plt.figure()
-plt.title("Probability of (makkara + harmony)")
+#plt.title("Probability of (makkara + harmony)")
 df = pd.DataFrame(data={'run': runs, 'step': steps, 
-                        'p_(makkara)': p_state_0, 'p_(metsä)': p_state_1, 
-                        'p_(makkara,metsä)': p_state_2})
-sns.lineplot(x='step', y='value', hue='variable', 
-             data=pd.melt(df, id_vars = ['step', 'run']))
+                        'A, vowel harmony': p_state_0, 'Ä, vowel harmony': p_state_1, 
+                        '(A,Ä), no vowel harmony': p_state_2})
+sns.lineplot(x='step', y='probability', hue='state', markers=True, style='state', markersize=14,
+             data=pd.melt(df, id_vars = ['step', 'run'], value_name='probability', var_name='state'))
 
 
 
