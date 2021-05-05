@@ -127,7 +127,7 @@ harmony_user = False
 
 print("Initialization of the test")
 
-n_test = 10
+n_test = 100
 CB_test = type48.sample(n=n_test)
 
 #CB_test = pd.concat([type2.sample(n=n_test),
@@ -158,7 +158,7 @@ p_d2 = []
 scores = []
 proba_diff = []
 
-n_runs = 2
+n_runs = 20
 
 for r in range(n_runs):
     print(r)
@@ -167,7 +167,7 @@ for r in range(n_runs):
     ###########################################################################
     print("Creation of the user")
 
-    n_user = 10
+    n_user = 100
     
     # CB contains all the possible cases that the user could know
 #    CB = pd.concat([type2.sample(n=n_user),
@@ -182,7 +182,7 @@ for r in range(n_runs):
     n_words = len(CB)
     
     # TODO: Choice of indices
-    n_known = 3
+    n_known = 30
     known_indices = list(np.random.permutation(n_user))[:n_known]
     
     # CB_user contains the cases that the user actually knows
@@ -216,14 +216,17 @@ for r in range(n_runs):
     probas_dist_user = np.array([0,0,1])
     proba_harmony_user = 0
         
-    evaluate(X_test, Y_test_user, a_solutions_test, a_distances_test, a_orders_test, CB_user, distances_def, probas_cb_user, probas_dist_user, proba_harmony_user)
+    #evaluate(X_test, Y_test_user, a_solutions_test, a_distances_test, a_orders_test, CB_user, distances_def, probas_cb_user, probas_dist_user, proba_harmony_user)
+    
+    a_solutions_test, a_distances_test, a_orders_test = init(X, Y, X_test, distances_def)
+    
     
     ###########################################################################
     # Teacher's CB
     
     print("Initialisation of the teaching corpus")
 
-    n_teach = 5
+    n_teach = 50
 #    CB_teach = pd.concat([type2.sample(n=n_teach),
 #                          type11.sample(n=n_teach),
 #                          type38.sample(n=n_teach),
