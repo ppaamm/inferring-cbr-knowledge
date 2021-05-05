@@ -359,23 +359,24 @@ def evaluate(X_test, Y_test, a_solutions, a_distances, a_orders, CB_user, distan
     score = 0
     
     for tgt in range(len(X_test)):
-        y = Y_test[tgt]
+        list_y = Y_test[tgt]
         
         order = [a_orders[d][tgt] for d in range(len(distances_def))]
         probas = [proba_1nn_total(o, probas_cb) for o in order]
         
-        p = 0
-        for h in range(2):
-            sol = a_solutions[h][tgt]
-            if y in sol:
-                indices = [idx for idx, f in enumerate(sol) if f == y] # indexes of NN yielding solution y
-                for v in indices:
-                    for d in range(len(distances_def)):
-                        if (h==0):
-                            p += (1 - proba_harmony) * probas_dist[d] * probas[d][v]
-                        else:
-                            p += proba_harmony * probas_dist[d] * probas[d][v]
-        score += p
+        for y, occ_y in list_y:
+            p = 0
+            for h in range(2):
+                sol = a_solutions[h][tgt]
+                if y in sol:
+                    indices = [idx for idx, f in enumerate(sol) if f == y] # indexes of NN yielding solution y
+                    for v in indices:
+                        for d in range(len(distances_def)):
+                            if (h==0):
+                                p += (1 - proba_harmony) * probas_dist[d] * probas[d][v]
+                            else:
+                                p += proba_harmony * probas_dist[d] * probas[d][v]
+            score += p * occ_y / len(list_y)
     return score / len(X_test)
 
 

@@ -200,13 +200,16 @@ for r in range(n_runs):
     print("Evaluation of the user")
     
     a_solutions_test, a_distances_test, a_orders_test = init(X_user, Y_user, X_test, distances_def)
+    idx_distance_user = distances_def.index(distance_user)
 
     # Evaluating the user on the test base 
     
     Y_test_user = []
-    for x in X_test:
-        source, _ = retrieval.retrieval(CB_user, x, distance_user)
-        Y_test_user.append(adaptation(source[0][0], source[0][1], x, harmony_user))
+    for ii, x in enumerate(X_test):
+        NN = a_orders_test[idx_distance_user][ii][0]
+        candidate_solutions = [a_solutions_test[harmony_user][ii][n] for n in NN]
+        l_sol = [(x,candidate_solutions.count(x)) for x in set(candidate_solutions)]
+        Y_test_user.append(l_sol)
         
     
     probas_cb_user = np.array([1 if i in known_indices else 0 for i in range(n_words)])
