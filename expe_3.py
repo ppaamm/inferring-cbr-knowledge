@@ -58,6 +58,7 @@ harmony_user = False
 
 transition_proba_estimated = .2   # Transition proba used by the teacher
 transition_proba_estimated_2 = .6
+transition_proba_estimated_3 = .9
         
 
 
@@ -109,7 +110,23 @@ p_d2_2 = []
 scores_2 = []
 proba_diff_2 = []
 
-n_runs = 10
+p_harmony_3 = []
+p_d0_3 = []
+p_d1_3 = []
+p_d2_3 = []
+scores_3 = []
+proba_diff_3 = []
+
+p_harmony_4 = []
+p_d0_4 = []
+p_d1_4 = []
+p_d2_4 = []
+scores_4 = []
+proba_diff_4 = []
+
+
+
+n_runs = 50
 
 for r in range(n_runs):
     print(r)
@@ -142,6 +159,14 @@ for r in range(n_runs):
     probas_dist_2 = np.ones(len(distances_def)) / len(distances_def)
     proba_harmony_2 = .5
     
+    probas_cb_3 = np.zeros(len(CB_teach))
+    probas_dist_3 = np.ones(len(distances_def)) / len(distances_def)
+    proba_harmony_3 = .5
+    
+    probas_cb_4 = np.zeros(len(CB_teach))
+    probas_dist_4 = np.ones(len(distances_def)) / len(distances_def)
+    proba_harmony_4 = .5
+    
 
     runs.append(r)
     steps.append(0)
@@ -153,11 +178,25 @@ for r in range(n_runs):
     proba_diff.append(0)
     
     p_harmony_2.append(proba_harmony)
-    p_d0_2.append(probas_dist[0])
-    p_d1_2.append(probas_dist[1])
-    p_d2_2.append(probas_dist[2])
+    p_d0_2.append(probas_dist_2[0])
+    p_d1_2.append(probas_dist_2[1])
+    p_d2_2.append(probas_dist_2[2])
     scores_2.append(1.)
     proba_diff_2.append(0)
+    
+    p_harmony_3.append(proba_harmony)
+    p_d0_3.append(probas_dist_3[0])
+    p_d1_3.append(probas_dist_3[1])
+    p_d2_3.append(probas_dist_3[2])
+    scores_3.append(1.)
+    proba_diff_3.append(0)
+    
+    p_harmony_4.append(proba_harmony)
+    p_d0_4.append(probas_dist_4[0])
+    p_d1_4.append(probas_dist_4[1])
+    p_d2_4.append(probas_dist_4[2])
+    scores_4.append(1.)
+    proba_diff_4.append(0)
     
     # Case 0: necessarily retained
     
@@ -170,6 +209,8 @@ for r in range(n_runs):
     idx_distance_user = distances_def.index(distance_user)
     probas_cb[dict_X[CB_teach[0][0]]] = 1.
     probas_cb_2[dict_X[CB_teach[0][0]]] = 1.
+    probas_cb_3[dict_X[CB_teach[0][0]]] = 1.
+    probas_cb_4[dict_X[CB_teach[0][0]]] = 1.
     probas_cb_user[dict_X[CB_teach[0][0]]] = 1.
     
     
@@ -182,11 +223,19 @@ for r in range(n_runs):
         y = adaptation(source[0][0], source[0][1], x, harmony_user)
         probas_cb, probas_dist, proba_harmony = update_probas_full(x, y, probas_cb, probas_dist, proba_harmony, X_teach, Y_teach, n_words_teach, distances_def, dict_X, a_solutions, a_orders)
         probas_cb_2, probas_dist_2, proba_harmony_2 = update_probas_full(x, y, probas_cb_2, probas_dist_2, proba_harmony_2, X_teach, Y_teach, n_words_teach, distances_def, dict_X, a_solutions, a_orders)
+        probas_cb_3, probas_dist_3, proba_harmony_3 = update_probas_full(x, y, probas_cb_3, probas_dist_3, proba_harmony_3, X_teach, Y_teach, n_words_teach, distances_def, dict_X, a_solutions, a_orders)
+        probas_cb_4, probas_dist_4, proba_harmony_4 = update_probas_full(x, y, probas_cb_4, probas_dist_4, proba_harmony_4, X_teach, Y_teach, n_words_teach, distances_def, dict_X, a_solutions, a_orders)
+        
         
         # Update
         probas_cb = probabilistic_state_transition(x, probas_cb, dict_X, transition_proba_estimated)
         probas_cb_2 = probabilistic_state_transition(x, probas_cb_2, dict_X, transition_proba_estimated_2)
+        probas_cb_3 = probabilistic_state_transition(x, probas_cb_2, dict_X, transition_proba_estimated_3)
         
+        if y == CB_teach[i][1]:
+            probas_cb_4 = probabilistic_state_transition(x, probas_cb_4, dict_X, .5)
+        else:
+            probas_cb_4 = probabilistic_state_transition(x, probas_cb_4, dict_X, .8)
         
         
         ###################################
@@ -220,10 +269,24 @@ for r in range(n_runs):
         p_d2_2.append(probas_dist_2[2])
         proba_diff_2.append(compare_probas(probas_cb_2, probas_cb_user))
         
+        p_harmony_3.append(proba_harmony_3)
+        p_d0_3.append(probas_dist_3[0])
+        p_d1_3.append(probas_dist_3[1])
+        p_d2_3.append(probas_dist_3[2])
+        proba_diff_3.append(compare_probas(probas_cb_3, probas_cb_user))
+        
+        p_harmony_4.append(proba_harmony_4)
+        p_d0_4.append(probas_dist_4[0])
+        p_d1_4.append(probas_dist_4[1])
+        p_d2_4.append(probas_dist_4[2])
+        proba_diff_4.append(compare_probas(probas_cb_4, probas_cb_user))
+        
         a_solutions_test, a_distances_test, a_orders_test = init(X_user, Y_user, X_test, distances_def)
         Y_test_user = test_user(X_test, idx_distance_user, a_orders_test, a_solutions_test, harmony_user)
         scores.append(evaluate(X_test, Y_test_user, a_solutions_test, a_distances_test, a_orders_test, CB_user, distances_def, probas_cb, probas_dist, proba_harmony))
         scores_2.append(evaluate(X_test, Y_test_user, a_solutions_test, a_distances_test, a_orders_test, CB_user, distances_def, probas_cb_2, probas_dist_2, proba_harmony_2))
+        scores_3.append(evaluate(X_test, Y_test_user, a_solutions_test, a_distances_test, a_orders_test, CB_user, distances_def, probas_cb_3, probas_dist_3, proba_harmony_3))
+        scores_4.append(evaluate(X_test, Y_test_user, a_solutions_test, a_distances_test, a_orders_test, CB_user, distances_def, probas_cb_4, probas_dist_4, proba_harmony_4))
         
 
 # Plot
@@ -282,7 +345,12 @@ plt.savefig(dt_string + '-fig1_3.png')
 
 plt.figure()
 
-df = pd.DataFrame(data={'run': runs, 'step': steps, 'Teacher 1': scores, 'Teacher 2': scores_2})
+df = pd.DataFrame(data={'run': runs, 'step': steps, 'Teacher 1': scores, 'Teacher 2': scores_2, 'Teacher 3': scores_3, 'Teacher 4': scores_4})
+sns.lineplot(x='step', y='score', hue='Teacher', 
+             data=pd.melt(df, id_vars = ['step', 'run'], value_name='score', var_name='Teacher'))
+
+
+df = pd.DataFrame(data={'run': runs, 'step': steps, 'Teacher 4': scores_4, 'Teacher 2': scores_2, 'Teacher 3': scores_3})
 sns.lineplot(x='step', y='score', hue='Teacher', 
              data=pd.melt(df, id_vars = ['step', 'run'], value_name='score', var_name='Teacher'))
 
@@ -292,7 +360,7 @@ plt.savefig(dt_string + '-fig2.png')
 # Figure 3
 
 plt.figure()
-df = pd.DataFrame(data={'run': runs, 'step': steps, 'Teacher 1': p_harmony, 'Teacher 2': p_harmony_2})
+df = pd.DataFrame(data={'run': runs, 'step': steps, 'Teacher 1': p_harmony, 'Teacher 2': p_harmony_2, 'Teacher 3': p_harmony_3, 'Teacher 4': p_harmony_4})
 sns.lineplot(x='step', y='harmony', hue='Teacher', 
              data=pd.melt(df, id_vars = ['step', 'run'], value_name='harmony', var_name='Teacher'))
 
@@ -303,7 +371,7 @@ plt.savefig(dt_string + '-fig3.png')
 
 plt.figure()
 
-df = pd.DataFrame(data={'run': runs, 'step': steps, 'Teacher 1': proba_diff, 'Teacher 2': proba_diff_2})
+df = pd.DataFrame(data={'run': runs, 'step': steps, 'Teacher 1': proba_diff, 'Teacher 2': proba_diff_2, 'Teacher 3': proba_diff_3, 'Teacher 4': proba_diff_4})
 sns.lineplot(x='step', y='proba_diff', hue='Teacher', 
              data=pd.melt(df, id_vars = ['step', 'run'], value_name='proba_diff', var_name='Teacher'))
 
