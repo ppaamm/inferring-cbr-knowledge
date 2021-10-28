@@ -109,6 +109,10 @@ def apply_harmony(C, D, harmony):
 
 
 def order_duplicate(L):
+    """
+    Returns the index of the elements of the list sorted from the smallest to
+    the largest. Elements with a same value are grouped together in a list. 
+    """
     order = np.argsort(L)
     prev = -1
     result = []
@@ -194,6 +198,7 @@ def update_probas_no_harmony(x, y, probas_cb, probas_dist, X, Y, n_data, distanc
 
 def update_probas_full(x, y, probas_cb, probas_dist, proba_harmony, X, Y, n_data, distances_def, dict_X, a_solutions, a_orders):
     """
+    Main method for the inference
     x: problem given to the user
     y: response of the user
     """

@@ -1,5 +1,5 @@
 from CBR import retrieval
-from CB_inference import adaptation, update_probas_full, init, evaluate, probabilistic_state_transition, compare_probas
+from CB_inference import adaptation, update_probas_full, init, evaluate, probabilistic_state_transition, compare_probas, order_duplicate
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -58,7 +58,7 @@ harmony_user = False
 
 transition_proba_estimated = .2   # Transition proba used by the teacher
 transition_proba_estimated_2 = .6
-transition_proba_estimated_3 = .9
+transition_proba_estimated_3 = .95
         
 
 
@@ -126,14 +126,14 @@ proba_diff_4 = []
 
 
 
-n_runs = 50
+n_runs = 20
 
 for r in range(n_runs):
     print(r)
     
     print("Initialisation of the teaching corpus")
 
-    n_teach = 10
+    n_teach = 50
     CB_teach = type48.sample(n=n_teach)    
     CB_teach = CB_teach.filter(items = ['nominative','inessive']).values.tolist()  
     
@@ -146,7 +146,7 @@ for r in range(n_runs):
     
     
     # used for testing:
-    a_solutions_test, a_distances_test, a_orders_test = init(X_teach, Y_teach, X_test, distances_def)
+    a_solutions_test_0, a_distances_test_0, a_orders_test_0 = init(X_teach, Y_teach, X_test, distances_def)
 
     
     # Priors
@@ -214,13 +214,15 @@ for r in range(n_runs):
     probas_cb_user[dict_X[CB_teach[0][0]]] = 1.
     
     
-    Y_test = test_user(X_test, idx_distance_user, a_orders_test, a_solutions_test, harmony_user)
+    #Y_test = test_user(X_test, idx_distance_user, a_orders_test, a_solutions_test, harmony_user)
     
     
     for i in range(1,n_words_teach):
+        if i % 10 == 0: print('-')
         x = CB_teach[i][0]
         source, _ = retrieval.retrieval(CB_user, x, distance_user)
         y = adaptation(source[0][0], source[0][1], x, harmony_user)
+        
         probas_cb, probas_dist, proba_harmony = update_probas_full(x, y, probas_cb, probas_dist, proba_harmony, X_teach, Y_teach, n_words_teach, distances_def, dict_X, a_solutions, a_orders)
         probas_cb_2, probas_dist_2, proba_harmony_2 = update_probas_full(x, y, probas_cb_2, probas_dist_2, proba_harmony_2, X_teach, Y_teach, n_words_teach, distances_def, dict_X, a_solutions, a_orders)
         probas_cb_3, probas_dist_3, proba_harmony_3 = update_probas_full(x, y, probas_cb_3, probas_dist_3, proba_harmony_3, X_teach, Y_teach, n_words_teach, distances_def, dict_X, a_solutions, a_orders)
@@ -281,7 +283,24 @@ for r in range(n_runs):
         p_d2_4.append(probas_dist_4[2])
         proba_diff_4.append(compare_probas(probas_cb_4, probas_cb_user))
         
-        a_solutions_test, a_distances_test, a_orders_test = init(X_user, Y_user, X_test, distances_def)
+        
+        #a_solutions_test, a_distances_test, a_orders_test = init(X_user, Y_user, X_test, distances_def)
+        # Replaced by the following:
+        
+        a_solutions_test = [[["" for xxx in X_user] for xx in X_test] for h in (0,1)]
+        a_distances_test = [[[0 for xxx in X_user] for xx in X_test] for d in distances_def]
+        
+        known_indices = [dict_X[x_user] for x_user in X_user]
+        
+        for idx, x_test in enumerate(X_test):
+            a_solutions_test[0][idx] = [a_solutions_test_0[0][idx][z] for z in known_indices]
+            a_solutions_test[1][idx] = [a_solutions_test_0[1][idx][z] for z in known_indices]
+            
+            for d in range(len(distances_def)):
+                a_distances_test[d][idx] = [a_distances_test_0[d][idx][z] for z in known_indices]
+        a_orders_test = [[order_duplicate(a_distances_test[d][x]) for x in  range(len(a_distances_test[d]))] for d in range(len(distances_def))]
+        
+        
         Y_test_user = test_user(X_test, idx_distance_user, a_orders_test, a_solutions_test, harmony_user)
         scores.append(evaluate(X_test, Y_test_user, a_solutions_test, a_distances_test, a_orders_test, CB_user, distances_def, probas_cb, probas_dist, proba_harmony))
         scores_2.append(evaluate(X_test, Y_test_user, a_solutions_test, a_distances_test, a_orders_test, CB_user, distances_def, probas_cb_2, probas_dist_2, proba_harmony_2))
@@ -346,12 +365,7 @@ plt.savefig(dt_string + '-fig1_3.png')
 plt.figure()
 
 df = pd.DataFrame(data={'run': runs, 'step': steps, 'Teacher 1': scores, 'Teacher 2': scores_2, 'Teacher 3': scores_3, 'Teacher 4': scores_4})
-sns.lineplot(x='step', y='score', hue='Teacher', 
-             data=pd.melt(df, id_vars = ['step', 'run'], value_name='score', var_name='Teacher'))
-
-
-df = pd.DataFrame(data={'run': runs, 'step': steps, 'Teacher 4': scores_4, 'Teacher 2': scores_2, 'Teacher 3': scores_3})
-sns.lineplot(x='step', y='score', hue='Teacher', 
+sns.lineplot(x='step', y='score', hue='Teacher', markers=True, style='Teacher', markersize=10,
              data=pd.melt(df, id_vars = ['step', 'run'], value_name='score', var_name='Teacher'))
 
 plt.savefig(dt_string + '-fig2.png')

@@ -63,7 +63,6 @@ def toy():
     # Initalize priors
     probas_cb = .5 * np.ones(n_words)
     probas_dist = np.ones(n_dist) / n_dist
-    #probas_dist = np.array([.1,.1,.8])
     proba_harmony = .5
     
     for i in range(n_words):
