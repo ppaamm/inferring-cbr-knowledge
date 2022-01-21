@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import datasaver
 import datetime
 
+from data.dataloader import DataLoader
 
 
 ###############################################################################
@@ -28,52 +29,38 @@ import datetime
 start_time = time.time()
 
 print("Loading data")
-
-df = pd.read_csv ("./data/FI/Inessive/ine.txt")
-df = df[df.inessive != '—']
-df = df[df.inessive != '–']
+data = DataLoader("./data/FI/Inessive/ine.txt", "inessive")
 
 
-#type2 = df[df.type == 2]
-#type11 = df[df.type == 11]
-#type38 = df[df.type == 38]
-#type41 = df[df.type == 41]
-type48 = df[df.type == 48]
+# Initialization of the test CB:
+
+print("Initialization of the test")
+
+n_test = 100
+
+# Composition of the test CB
+CB_test_composition = [(48, n_test)]
+
+CB_test, X_test, Y_test = data.generate_CB(CB_test_composition)
 
 
-# Parameters
+
+
+
+# Parameters: Distances
 
 distances_def = [retrieval.dist2, retrieval.dist3, retrieval.dist5]
 
 
 # User definition:
-
-
-
 distance_user = distances_def[2]
 harmony_user = False
 
 
-# Initialization of the test:
-
-print("Initialization of the test")
-
-n_test = 100
-CB_test = type48.sample(n=n_test)
-
-#CB_test = pd.concat([type2.sample(n=n_test),
-#                       type11.sample(n=n_test),
-#                       type38.sample(n=n_test),
-#                       type41.sample(n=n_test)])
-
-CB_test = CB_test.filter(items = ['nominative','inessive']).values.tolist()  
-
-
-X_test = [z[0] for z in CB_test]
-Y_test = [z[1] for z in CB_test]
 
 
 
+###############################################################################
 
 
 
@@ -99,18 +86,12 @@ for r in range(n_runs):
     print("Creation of the user")
 
     n_user = 100
-    
-    # CB contains all the possible cases that the user could know
-#    CB = pd.concat([type2.sample(n=n_user),
-#                    type11.sample(n=n_user),
-#                    type38.sample(n=n_user),
-#                    type41.sample(n=n_user)])
-        
-    CB = type48.sample(n=n_user)    
-    CB = CB.filter(items = ['nominative','inessive']).values.tolist()  
-    X = [z[0] for z in CB]
-    Y = [z[1] for z in CB]
+    CB_composition = [(48, n_user)]
+
+    CB, X, Y = data.generate_CB(CB_composition)
     n_words = len(CB)
+    
+    
     
     # TODO: Choice of indices
     n_known = 30
@@ -118,13 +99,11 @@ for r in range(n_runs):
     
     # CB_user contains the cases that the user actually knows
     CB_user = [CB[i] for i in known_indices]
-    
     X_user = [z[0] for z in CB_user]
     Y_user = [z[1] for z in CB_user]
     
     probas_cb_user = np.array([1 if i in known_indices else 0 for i in range(n_words)])
-    
-    
+
     ###########################################################################
     # Testing the user
     
@@ -147,7 +126,6 @@ for r in range(n_runs):
     probas_dist_user = np.array([0,0,1])
     proba_harmony_user = 0
         
-    #evaluate(X_test, Y_test_user, a_solutions_test, a_distances_test, a_orders_test, CB_user, distances_def, probas_cb_user, probas_dist_user, proba_harmony_user)
     
     a_solutions_test, a_distances_test, a_orders_test = init(X, Y, X_test, distances_def)
     
@@ -158,17 +136,10 @@ for r in range(n_runs):
     print("Initialisation of the teaching corpus")
 
     n_teach = 50
-#    CB_teach = pd.concat([type2.sample(n=n_teach),
-#                          type11.sample(n=n_teach),
-#                          type38.sample(n=n_teach),
-#                          type41.sample(n=n_teach)])
-    
-#    CB_teach = CB_teach.filter(items = ['nominative','genitive']).values.tolist()
-    CB_teach = type48.sample(n=n_teach)    
-    CB_teach = CB_teach.filter(items = ['nominative','inessive']).values.tolist()  
+    CB_teach_composition = [(48, n_teach)]
+    CB_teach, X_teach, Y_teach = data.generate_CB(CB_teach_composition)
     
     n_words_teach = len(CB_teach)
-    X_teach = [z[0] for z in CB_teach]
     dict_X = {X_teach[i]:i for i in range(len(X_teach))}
     
     a_solutions, a_distances, a_orders = init(X, Y, X_teach, distances_def)
