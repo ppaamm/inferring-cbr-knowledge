@@ -1,5 +1,6 @@
 from CBR import retrieval
-from CB_inference import adaptation, update_probas_full, init, evaluate, compare_probas
+from CB_inference import adaptation, init, evaluate, compare_probas
+from CB_inference import PreComputation, InferenceEngine
 import numpy as np
 import pandas as pd
 import random
@@ -29,19 +30,19 @@ from data.dataloader import DataLoader
 start_time = time.time()
 
 print("Loading data")
-data = DataLoader("./data/FI/Inessive/ine.txt", "inessive")
+data_loader = DataLoader("./data/FI/Inessive/ine.txt", "nominative", "inessive")
 
 
 # Initialization of the test CB:
 
 print("Initialization of the test")
 
-n_test = 100
+n_test = 3
 
 # Composition of the test CB
 CB_test_composition = [(48, n_test)]
 
-CB_test, X_test, Y_test = data.generate_CB(CB_test_composition)
+CB_test, X_test, Y_test = data_loader.generate_CB(CB_test_composition)
 
 
 
@@ -76,7 +77,7 @@ p_d2 = []
 scores = []
 proba_diff = []
 
-n_runs = 20
+n_runs = 10
 
 for r in range(n_runs):
     print(r)
@@ -85,16 +86,16 @@ for r in range(n_runs):
     ###########################################################################
     print("Creation of the user")
 
-    n_user = 100
+    n_user = 5
     CB_composition = [(48, n_user)]
 
-    CB, X, Y = data.generate_CB(CB_composition)
+    CB, X, Y = data_loader.generate_CB(CB_composition)
     n_words = len(CB)
     
     
     
     # TODO: Choice of indices
-    n_known = 30
+    n_known = 2
     known_indices = list(np.random.permutation(n_user))[:n_known]
     
     # CB_user contains the cases that the user actually knows
@@ -109,15 +110,15 @@ for r in range(n_runs):
     
     print("Evaluation of the user")
     
-    a_solutions_test, a_distances_test, a_orders_test = init(X_user, Y_user, X_test, distances_def)
+    user_test_precomp = PreComputation(X_user, Y_user, X_test, distances_def)
     idx_distance_user = distances_def.index(distance_user)
 
     # Evaluating the user on the test base 
     
     Y_test_user = []
     for ii, x in enumerate(X_test):
-        NN = a_orders_test[idx_distance_user][ii][0]
-        candidate_solutions = [a_solutions_test[harmony_user][ii][n] for n in NN]
+        NN = user_test_precomp.a_orders[idx_distance_user][ii][0]
+        candidate_solutions = [user_test_precomp.a_solutions[harmony_user][ii][n] for n in NN]
         l_sol = [(x,candidate_solutions.count(x)) for x in set(candidate_solutions)]
         Y_test_user.append(l_sol)
         
@@ -127,7 +128,7 @@ for r in range(n_runs):
     proba_harmony_user = 0
         
     
-    a_solutions_test, a_distances_test, a_orders_test = init(X, Y, X_test, distances_def)
+    full_test_precomp = PreComputation(X, Y, X_test, distances_def)
     
     
     ###########################################################################
@@ -135,31 +136,43 @@ for r in range(n_runs):
     
     print("Initialisation of the teaching corpus")
 
-    n_teach = 50
+    n_teach = 3
     CB_teach_composition = [(48, n_teach)]
-    CB_teach, X_teach, Y_teach = data.generate_CB(CB_teach_composition)
+    CB_teach, X_teach, Y_teach = data_loader.generate_CB(CB_teach_composition)
     
     n_words_teach = len(CB_teach)
-    dict_X = {X_teach[i]:i for i in range(len(X_teach))}
+    dict_X = {X_teach[i]: i for i in range(len(X_teach))}
     
-    a_solutions, a_distances, a_orders = init(X, Y, X_teach, distances_def)
+    teacher_precomputation = PreComputation(X, Y, X_teach, distances_def)
         
     # Priors
 
-    probas_cb = .5 * np.ones(len(CB))
-    probas_dist = np.ones(len(distances_def)) / len(distances_def)
-    proba_harmony = .5
+    prior_cb = .5 * np.ones(len(CB))
+    prior_dist = np.ones(len(distances_def)) / len(distances_def)
+    prior_harmony = .5
+    
+    
+    inference = InferenceEngine(CB, prior_cb, prior_dist, prior_harmony, teacher_precomputation)
+    
     
     
     randomized = random.sample(list(range(n_words_teach)), n_words_teach)
     runs.append(r)
     steps.append(0)
-    p_harmony.append(proba_harmony)
-    p_d0.append(probas_dist[0])
-    p_d1.append(probas_dist[1])
-    p_d2.append(probas_dist[2])
-    scores.append(evaluate(X_test, Y_test_user, a_solutions_test, a_distances_test, a_orders_test, CB_user, distances_def, probas_cb, probas_dist, proba_harmony))
-    proba_diff.append(compare_probas(probas_cb, probas_cb_user))
+    p_harmony.append(inference.proba_harmony)
+    p_d0.append(inference.probas_dist[0])
+    p_d1.append(inference.probas_dist[1])
+    p_d2.append(inference.probas_dist[2])
+    scores.append(evaluate(X_test, Y_test_user, 
+                           full_test_precomp.a_solutions, 
+                           full_test_precomp.a_distances, 
+                           full_test_precomp.a_orders, 
+                           CB_user, 
+                           distances_def, 
+                           inference.probas_cb, 
+                           inference.probas_dist, 
+                           inference.proba_harmony))
+    proba_diff.append(compare_probas(inference.probas_cb, probas_cb_user))
     
     
     print("Teaching")
@@ -171,20 +184,30 @@ for r in range(n_runs):
         x = CB_teach[randomized[i]][0]
         source, _ = retrieval.retrieval(CB_user, x, distance_user)
         y = adaptation(source[0][0], source[0][1], x, harmony_user)
-        probas_cb, probas_dist, proba_harmony = update_probas_full(x, y, probas_cb, probas_dist, proba_harmony, X, Y, n_words, distances_def, dict_X, a_solutions, a_orders)
+        inference.update_probas(dict_X[x], y)
+
         
         runs.append(r)
         steps.append(i+1)        
-        p_harmony.append(proba_harmony)
-        p_d0.append(probas_dist[0])
-        p_d1.append(probas_dist[1])
-        p_d2.append(probas_dist[2])
-        proba_diff.append(compare_probas(probas_cb, probas_cb_user))
-        scores.append(evaluate(X_test, Y_test_user, a_solutions_test, a_distances_test, a_orders_test, CB_user, distances_def, probas_cb, probas_dist, proba_harmony))
+        p_harmony.append(inference.proba_harmony)
+        p_d0.append(inference.probas_dist[0])
+        p_d1.append(inference.probas_dist[1])
+        p_d2.append(inference.probas_dist[2])
+        proba_diff.append(compare_probas(inference.probas_cb, probas_cb_user))
+        scores.append(evaluate(X_test, 
+                               Y_test_user, 
+                               full_test_precomp.a_solutions, 
+                               full_test_precomp.a_distances, 
+                               full_test_precomp.a_orders, 
+                               CB_user, 
+                               distances_def, 
+                               inference.probas_cb, 
+                               inference.probas_dist, 
+                               inference.proba_harmony))
         
     data = {'run': runs, 'step': steps, 'd0': p_d0, 'd1': p_d1, 'd2': p_d2, 'harmony': p_harmony, 'score': scores,
         'n_words': n_words, 'n_user': len(known_indices), 'n_teacher': len(CB_teach), 'n_test': len(CB_test),
-        'p_words': probas_cb, 'X_teach': X_teach, 'CB_user': CB_user}
+        'p_words': inference.probas_cb, 'X_teach': X_teach, 'CB_user': CB_user}
     datasaver.save(data, '1-Temp' + str(r))
 
 # Plot

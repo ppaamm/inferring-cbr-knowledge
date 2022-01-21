@@ -43,14 +43,14 @@ class PreComputation:
 
 
 
-class CBInferenceEngine:
+class InferenceEngine:
     
     def __init__(self, CB: List[List[str]], 
                  prior_cb: np.ndarray, 
                  prior_dist: np.ndarray, 
                  prior_harmony: np.ndarray, 
                  precomputation: PreComputation):
-        self.CB
+        self.CB = CB
         self.probas_cb = prior_cb
         self.probas_dist = prior_dist
         self.proba_harmony = prior_harmony
