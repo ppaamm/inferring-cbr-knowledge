@@ -6,6 +6,170 @@ Inference of the case base with k=1
 from CBR import analogy
 import numpy as np
 import copy
+from typing import List
+
+
+
+
+class PreComputation:
+    
+    def __init__(self, X, Y, X_teach, distances_def):
+        a_s, a_d, a_o = self.run_precomputations(X, Y, X_teach, distances_def)
+        self.a_solutions = a_s
+        self.a_distances = a_d
+        self.a_orders = a_o
+
+
+    def run_precomputations(self, A, B, C, distances_def):    
+        # compute solutions analogy
+        a_solutions = [[[None for z in range(len(A))] for _ in range(len(C)) ] for h in (0,1)]
+        for i in range(len(C)):
+            for j in range(len(A)):
+                a_solutions[0][i][j] = analogy.solveAnalogy(A[j], B[j], C[i])[0][0][0]
+                a_solutions[1][i][j] = apply_harmony(C[i], a_solutions[0][i][j], True)
+    
+        # compute distances
+        a_distances = np.zeros((len(distances_def), len(C), len(A)))
+        for idx_d, d in enumerate(distances_def):
+            for i in range(len(C)):
+                a_distances[idx_d][i] = np.array([d([A[f], B[f]], C[i]) for f in range(len(A))])    
+        
+        #a_orders = np.argsort(a_distances, axis=2)
+        a_orders = [[order_duplicate(a_distances[d][x]) for x in  range(len(a_distances[d]))] for d in range(len(distances_def))]
+        
+        return a_solutions, a_distances, a_orders
+
+
+
+
+
+class CBInferenceEngine:
+    
+    def __init__(self, CB: List[List[str]], 
+                 prior_cb: np.ndarray, 
+                 prior_dist: np.ndarray, 
+                 prior_harmony: np.ndarray, 
+                 precomputation: PreComputation):
+        self.CB
+        self.probas_cb = prior_cb
+        self.probas_dist = prior_dist
+        self.proba_harmony = prior_harmony
+        self.precomputation = precomputation
+        
+        self.n_data = self.probas_cb.shape[0]
+        self.n_distances = self.probas_dist.shape[0]
+        
+        
+        
+    def _update_probas_cb(self, idx_x, y, order):
+        updated_probas_cb = np.zeros(self.n_data)    
+    
+        
+        
+        for i in range(self.n_data):
+            # updating probas_cb[i]
+    
+            # check lambda_i = 1 / 0 (case in CB)
+            likelihood_result_1 = 0
+            likelihood_result_0 = 0
+            for j in range(self.n_data):
+                
+                # if harmony
+                likelihood_adapt = 0
+                # if adaptation(X[j], Y[j], x, True) == y:
+                if self.precomputation.a_solutions[1][idx_x][j] == y: 
+                     likelihood_adapt += self.proba_harmony
+                # if adaptation(X[j], Y[j], x, False) == y:
+                if self.precomputation.a_solutions[0][idx_x][j] == y:
+                     likelihood_adapt += (1 - self.proba_harmony)
+    
+                
+                for d in range(3):                
+                    likelihood_result_1 += likelihood_adapt * proba_1nn(order[d], j, i, 1, self.probas_cb) * self.probas_dist[d]
+                    likelihood_result_0 += likelihood_adapt * proba_1nn(order[d], j, i, 0, self.probas_cb) * self.probas_dist[d]
+    
+            
+            proba_1 = likelihood_result_1 * self.probas_cb[i]
+            proba_0 = likelihood_result_0 * (1 - self.probas_cb[i])
+            updated_probas_cb[i] = proba_1 / (proba_1 + proba_0)
+        
+        return updated_probas_cb
+        
+    
+    
+    def _update_probas_dist(self, idx_x, y, order):
+        likelihood_result = np.array([0.0, 0.0, 0.0])
+        for j in range(self.n_data):
+            # if harmony
+            likelihood_adapt = 0
+            # if adaptation(X[j], Y[j], x, True) == y:
+            if self.precomputation.a_solutions[1][idx_x][j] == y:
+                likelihood_adapt += self.proba_harmony
+            # if adaptation(X[j], Y[j], x, False) == y:
+            if self.precomputation.a_solutions[0][idx_x][j] == y:
+                likelihood_adapt += (1 - self.proba_harmony)
+               
+            for d in range(3):
+                likelihood_result[d] += likelihood_adapt * proba_1nn_base(order[d], j, self.probas_cb)
+         
+        updated_probas_dist = self.probas_dist * likelihood_result 
+        updated_probas_dist = updated_probas_dist / np.sum(updated_probas_dist)
+        
+        return updated_probas_dist
+    
+    
+    
+    def _update_proba_harmony(self, idx_x, y, order):
+        likelihood_result = np.array([.0,.0])
+        for j in range(self.n_data):
+            works_harmony = self.precomputation.a_solutions[1][idx_x][j] == y
+            works_non_harmony = self.precomputation.a_solutions[0][idx_x][j] == y
+    
+            
+            if (works_harmony or works_non_harmony):
+                for d in range(3):    
+                    likelihood_result[0] += works_non_harmony * proba_1nn_base(order[d], j, self.probas_cb) * self.probas_dist[d]
+                    likelihood_result[1] += works_harmony * proba_1nn_base(order[d], j, self.probas_cb) * self.probas_dist[d]
+                    
+            updated_proba_harmony_1 = likelihood_result[1] * self.proba_harmony
+            updated_proba_harmony_0 = likelihood_result[0] * (1 - self.proba_harmony)
+
+            updated_proba_harmony = updated_proba_harmony_1 / (updated_proba_harmony_1 + updated_proba_harmony_0)
+        
+        return updated_proba_harmony
+    
+    
+        
+    
+    def update_probas(self, idx_x: int, y: str):
+        """
+        Compute the posterior distribution given the user's given solution
+
+        Parameters
+        ----------
+        idx_x : int
+            Index of the source problem (in the global CB).
+        y : str
+            Given solution.
+
+        Returns
+        -------
+        None.
+
+        """
+        order = [self.precomputation.a_orders[d][idx_x] for d in range(self.n_distances)]
+        self.probas_cb = self._update_probas_cb(idx_x, y, order)
+        self.probas_dist = self._update_probas_dist(idx_x, y, order)
+        self.proba_harmony = self._update_proba_harmony(idx_x, y, order)
+        
+        
+        
+        
+        
+        
+        
+        
+
 
 
 
