@@ -1,5 +1,5 @@
 from CBR import retrieval
-from CB_inference import adaptation, init, evaluate, compare_probas
+from CB_inference import adaptation, evaluate, compare_probas
 from CB_inference import PreComputation, InferenceEngine
 import numpy as np
 import pandas as pd
