@@ -1,6 +1,7 @@
 from CBR import retrieval, adaptation
 from evaluation import Evaluation, compare_probas
 from CB_inference import PreComputation, InferenceEngine
+from log import Log
 import numpy as np
 import pandas as pd
 import random
@@ -68,14 +69,7 @@ harmony_user = False
 print("Starting the teaching")
 
 
-runs = []
-steps = []
-p_harmony = []
-p_d0 = []
-p_d1 = []
-p_d2 = []
-scores = []
-proba_diff = []
+log = Log()
 
 n_runs = 10
 
@@ -159,14 +153,9 @@ for r in range(n_runs):
     
     
     randomized = random.sample(list(range(n_words_teach)), n_words_teach)
-    runs.append(r)
-    steps.append(0)
-    p_harmony.append(inference.proba_harmony)
-    p_d0.append(inference.probas_dist[0])
-    p_d1.append(inference.probas_dist[1])
-    p_d2.append(inference.probas_dist[2])
-    scores.append(evaluation.evaluate(inference))
-    proba_diff.append(compare_probas(inference.probas_cb, probas_cb_user))
+    
+    log.update(r, 0, inference, evaluation.evaluate(inference), compare_probas(inference.probas_cb, probas_cb_user))
+    
     
     
     print("Teaching")
@@ -180,17 +169,9 @@ for r in range(n_runs):
         y = adaptation.adaptation(source[0][0], source[0][1], x, harmony_user)
         inference.update_probas(dict_X[x], y)
 
+        log.update(r, i+1, inference, evaluation.evaluate(inference), compare_probas(inference.probas_cb, probas_cb_user))
         
-        runs.append(r)
-        steps.append(i+1)        
-        p_harmony.append(inference.proba_harmony)
-        p_d0.append(inference.probas_dist[0])
-        p_d1.append(inference.probas_dist[1])
-        p_d2.append(inference.probas_dist[2])
-        proba_diff.append(compare_probas(inference.probas_cb, probas_cb_user))
-        scores.append(evaluation.evaluate(inference))
-        
-    data = {'run': runs, 'step': steps, 'd0': p_d0, 'd1': p_d1, 'd2': p_d2, 'harmony': p_harmony, 'score': scores,
+    data = {'run': log.runs, 'step': log.steps, 'd0': log.p_d0, 'd1': log.p_d1, 'd2': log.p_d2, 'harmony': log.p_harmony, 'score': log.scores,
         'n_words': n_words, 'n_user': len(known_indices), 'n_teacher': len(CB_teach), 'n_test': len(CB_test),
         'p_words': inference.probas_cb, 'X_teach': X_teach, 'CB_user': CB_user}
     datasaver.save(data, '1-Temp' + str(r))
@@ -208,7 +189,7 @@ dt_string = 'expe1-' +  datetime.datetime.now().strftime("%d-%m-%Y-%H-%M-%S")
 
 plt.figure()
         
-df = pd.DataFrame(data={'run': runs, 'step': steps, 'd0': p_d0, 'd1': p_d1, 'd2': p_d2})
+df = pd.DataFrame(data={'run': log.runs, 'step': log.steps, 'd0': log.p_d0, 'd1': log.p_d1, 'd2': log.p_d2})
 
 sns.lineplot(x='step', y='probability', hue='distance', 
              data=pd.melt(df, id_vars = ['step', 'run'], value_name='probability', var_name='distance'))
@@ -220,7 +201,7 @@ plt.savefig(dt_string + '-fig1.png')
 
 plt.figure()
 
-df = pd.DataFrame(data={'run': runs, 'step': steps, 'score': scores})
+df = pd.DataFrame(data={'run': log.runs, 'step': log.steps, 'score': log.scores})
 sns.lineplot(x='step', y='score', data=df)
 
 plt.savefig(dt_string + '-fig2.png')
@@ -229,7 +210,7 @@ plt.savefig(dt_string + '-fig2.png')
 # Figure 3
 
 plt.figure()
-df = pd.DataFrame(data={'run': runs, 'step': steps, 'harmony': p_harmony})
+df = pd.DataFrame(data={'run': log.runs, 'step': log.steps, 'harmony': log.p_harmony})
 sns.lineplot(x='step', y='harmony', data=df)
 
 plt.savefig(dt_string + '-fig3.png')
@@ -239,7 +220,7 @@ plt.savefig(dt_string + '-fig3.png')
 
 plt.figure()
         
-df = pd.DataFrame(data={'run': runs, 'step': steps, 'd0': p_d0, 'd1': p_d1, 'd2': p_d2, 'harmony': p_harmony})
+df = pd.DataFrame(data={'run': log.runs, 'step': log.steps, 'd0': log.p_d0, 'd1': log.p_d1, 'd2': log.p_d2, 'harmony': log.p_harmony})
 
 sns.lineplot(x='step', y='probability', hue='parameter', 
              data=pd.melt(df, id_vars = ['step', 'run'], value_name='probability', var_name='parameter'))
@@ -247,7 +228,7 @@ sns.lineplot(x='step', y='probability', hue='parameter',
 plt.savefig(dt_string + '-fig4.png')
 
 
-data = {'run': runs, 'step': steps, 'd0': p_d0, 'd1': p_d1, 'd2': p_d2, 'harmony': p_harmony, 'score': scores,
+data = {'run': log.runs, 'step': log.steps, 'd0': log.p_d0, 'd1': log.p_d1, 'd2': log.p_d2, 'harmony': log.p_harmony, 'score': log.scores,
         'n_words': n_words, 'n_user': len(known_indices), 'n_teacher': len(CB_teach), 'n_test': len(CB_test)}
 
 
@@ -255,7 +236,7 @@ data = {'run': runs, 'step': steps, 'd0': p_d0, 'd1': p_d1, 'd2': p_d2, 'harmony
 # Figure 5
 
 plt.figure()
-df = pd.DataFrame(data={'run': runs, 'step': steps, 'proba_diff': proba_diff})
+df = pd.DataFrame(data={'run': log.runs, 'step': log.steps, 'proba_diff': log.proba_diff})
 sns.lineplot(x='step', y='proba_diff', data=df)
 
 plt.savefig(dt_string + '-fig5.png')

@@ -133,6 +133,8 @@ class InferenceEngine:
                     
             updated_proba_harmony_1 = likelihood_result[1] * self.proba_harmony
             updated_proba_harmony_0 = likelihood_result[0] * (1 - self.proba_harmony)
+            
+            
 
             updated_proba_harmony = updated_proba_harmony_1 / (updated_proba_harmony_1 + updated_proba_harmony_0)
         
@@ -282,40 +284,3 @@ def probabilistic_state_transition(x, probas_cb, dict_X, p):
     idx_x = dict_X[x]
     probas_cb[idx_x] = probas_cb[idx_x] + (1 - probas_cb[idx_x]) * p
     return probas_cb
-
-
-
-
-
-
-
-
-def evaluate(X_test, Y_test, a_solutions, a_distances, a_orders, CB_user, distances_def, probas_cb, probas_dist, proba_harmony):
-    score = 0
-    
-    for tgt in range(len(X_test)):
-        list_y = Y_test[tgt]
-        
-        order = [a_orders[d][tgt] for d in range(len(distances_def))]
-        probas = [proba_1nn_total(o, probas_cb) for o in order]
-        
-        for y, occ_y in list_y:
-            p = 0
-            for h in range(2):
-                sol = a_solutions[h][tgt]
-                if y in sol:
-                    indices = [idx for idx, f in enumerate(sol) if f == y] # indexes of NN yielding solution y
-                    for v in indices:
-                        for d in range(len(distances_def)):
-                            if (h==0):
-                                p += (1 - proba_harmony) * probas_dist[d] * probas[d][v]
-                            else:
-                                p += proba_harmony * probas_dist[d] * probas[d][v]
-            score += p * occ_y / len(list_y)
-    return score / len(X_test)
-
-
-
-
-def compare_probas(probas_cb, probas_cb_user):
-    return np.sum(np.abs(probas_cb_user - probas_cb)) / probas_cb.shape[0]
