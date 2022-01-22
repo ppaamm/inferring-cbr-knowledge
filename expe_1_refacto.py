@@ -1,5 +1,5 @@
-from CBR import retrieval
-from CB_inference import adaptation, evaluate, compare_probas
+from CBR import retrieval, adaptation
+from CB_inference import evaluate, compare_probas
 from CB_inference import PreComputation, InferenceEngine
 import numpy as np
 import pandas as pd
@@ -183,7 +183,7 @@ for r in range(n_runs):
         
         x = CB_teach[randomized[i]][0]
         source, _ = retrieval.retrieval(CB_user, x, distance_user)
-        y = adaptation(source[0][0], source[0][1], x, harmony_user)
+        y = adaptation.adaptation(source[0][0], source[0][1], x, harmony_user)
         inference.update_probas(dict_X[x], y)
 
         

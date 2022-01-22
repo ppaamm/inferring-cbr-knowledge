@@ -3,7 +3,7 @@ Inference of the case base with k=1
 """
 
 
-from CBR import analogy
+from CBR import adaptation, analogy
 import numpy as np
 import copy
 from typing import List
@@ -26,7 +26,7 @@ class PreComputation:
         for i in range(len(C)):
             for j in range(len(A)):
                 a_solutions[0][i][j] = analogy.solveAnalogy(A[j], B[j], C[i])[0][0][0]
-                a_solutions[1][i][j] = apply_harmony(C[i], a_solutions[0][i][j], True)
+                a_solutions[1][i][j] = adaptation.apply_harmony(C[i], a_solutions[0][i][j], True)
     
         # compute distances
         a_distances = np.zeros((len(distances_def), len(C), len(A)))
@@ -205,34 +205,7 @@ def proba_1nn(order, j, i, i_proba, probas_cb):
              
                 
 
-def adaptation(A, B, C, harmony):
-    """
-    Deprecated
-    """
-    D = analogy.solveAnalogy(A, B, C)[0][0][0]
-    if harmony:
-        if "a" in C or "o" in C or "u" in C:
-            D = D.replace("ä", "a")
-            D = D.replace("ö", "o")
-            D = D.replace("y", "u")
-        else:
-            D = D.replace("a", "ä")
-            D = D.replace("o", "ö")
-            D = D.replace("u", "y")
-    return D
 
-
-def apply_harmony(C, D, harmony):
-    if harmony:
-        if "a" in C or "o" in C or "u" in C:
-            D = D.replace("ä", "a")
-            D = D.replace("ö", "o")
-            D = D.replace("y", "u")
-        else:
-            D = D.replace("a", "ä")
-            D = D.replace("o", "ö")
-            D = D.replace("u", "y")
-    return D    
 
 
 
