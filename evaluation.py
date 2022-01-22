@@ -1,4 +1,4 @@
-from . CB_inference import proba_1nn_total, PreComputation, InferenceEngine
+from CB_inference import proba_1nn_total, PreComputation, InferenceEngine
 import numpy as np
 
 
@@ -30,7 +30,7 @@ class Evaluation:
                         for v in indices:
                             for d in range(inference.n_distances):
                                 if (h==0):
-                                    p += (1 - inference.proba_harmony) * inference.probas_dist[d] * inference.probas[d][v]
+                                    p += (1 - inference.proba_harmony) * inference.probas_dist[d] * probas[d][v]
                                 else:
                                     p += inference.proba_harmony * inference.probas_dist[d] * probas[d][v]
                 score += p * occ_y / len(list_y)

@@ -1,5 +1,5 @@
 from CBR import retrieval, adaptation
-from CB_inference import evaluate, compare_probas
+from evaluation import Evaluation, compare_probas
 from CB_inference import PreComputation, InferenceEngine
 import numpy as np
 import pandas as pd
@@ -103,12 +103,11 @@ for r in range(n_runs):
     X_user = [z[0] for z in CB_user]
     Y_user = [z[1] for z in CB_user]
     
-    probas_cb_user = np.array([1 if i in known_indices else 0 for i in range(n_words)])
 
     ###########################################################################
     # Testing the user
     
-    print("Evaluation of the user")
+    print("Testing the user")
     
     user_test_precomp = PreComputation(X_user, Y_user, X_test, distances_def)
     idx_distance_user = distances_def.index(distance_user)
@@ -129,6 +128,9 @@ for r in range(n_runs):
         
     
     full_test_precomp = PreComputation(X, Y, X_test, distances_def)
+    
+    # Setting the evaluation module
+    evaluation = Evaluation(X_test, Y_test_user, full_test_precomp)
     
     
     ###########################################################################
@@ -163,15 +165,7 @@ for r in range(n_runs):
     p_d0.append(inference.probas_dist[0])
     p_d1.append(inference.probas_dist[1])
     p_d2.append(inference.probas_dist[2])
-    scores.append(evaluate(X_test, Y_test_user, 
-                           full_test_precomp.a_solutions, 
-                           full_test_precomp.a_distances, 
-                           full_test_precomp.a_orders, 
-                           CB_user, 
-                           distances_def, 
-                           inference.probas_cb, 
-                           inference.probas_dist, 
-                           inference.proba_harmony))
+    scores.append(evaluation.evaluate(inference))
     proba_diff.append(compare_probas(inference.probas_cb, probas_cb_user))
     
     
@@ -194,16 +188,7 @@ for r in range(n_runs):
         p_d1.append(inference.probas_dist[1])
         p_d2.append(inference.probas_dist[2])
         proba_diff.append(compare_probas(inference.probas_cb, probas_cb_user))
-        scores.append(evaluate(X_test, 
-                               Y_test_user, 
-                               full_test_precomp.a_solutions, 
-                               full_test_precomp.a_distances, 
-                               full_test_precomp.a_orders, 
-                               CB_user, 
-                               distances_def, 
-                               inference.probas_cb, 
-                               inference.probas_dist, 
-                               inference.proba_harmony))
+        scores.append(evaluation.evaluate(inference))
         
     data = {'run': runs, 'step': steps, 'd0': p_d0, 'd1': p_d1, 'd2': p_d2, 'harmony': p_harmony, 'score': scores,
         'n_words': n_words, 'n_user': len(known_indices), 'n_teacher': len(CB_teach), 'n_test': len(CB_test),
